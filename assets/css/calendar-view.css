@@ -1,0 +1,47 @@
+.codo-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.codo-day {
+  padding: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.codo-day.disabled {
+  background: #eee;
+  color: #999;
+  cursor: not-allowed;
+}
+.codo-day.selected {
+  background: #0073aa;
+  color: #fff;
+}
+.codo-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.codo-loading {
+  text-align: center;
+  padding: 15px;
+}
+.codo-slot {
+  padding: 6px 10px;
+  margin: 4px;
+  border: 1px solid #0073aa;
+  background: #fff;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.codo-slot.selected {
+  background: #0073aa;
+  color: #fff;
+}
+.codo-selected-result {
+  margin-top: 10px;
+  font-weight: bold;
+}
