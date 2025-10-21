@@ -38,54 +38,56 @@ function codo_datetime_to_timestamp( $date, $time ) {
 }
 
 /**
- * Check time slot conflict considering duration (in minutes)
+ * Check if a time slot is already booked for a given date.
  *
- * Returns true if the requested slot overlaps any existing booking.
+ * Returns true if the requested slot is already taken (publish or pending),
+ * ignoring cancelled bookings.
+ *
+ * @param string $date Date in Y-m-d format.
+ * @param string $time Time in H:i format.
+ * @return bool True if conflict exists, false otherwise.
  */
-function codo_is_time_slot_conflict( $date, $time, $duration = 0 ) {
-    // Convert requested slot to start/end timestamps
-    $req_start = codo_datetime_to_timestamp( $date, $time );
-    if ( $req_start <= 0 ) {
-        return false; // invalid date/time
-    }
-    $req_end = $req_start + ( intval( $duration ) * 60 );
-
-    // Query all bookings on the same date (publish/pending)
-    $q = new WP_Query( array(
-        'post_type'      => 'codo_booking',
-        'post_status'    => array( 'publish', 'pending' ),
-        'meta_query'     => array(
-            array(
-                'key'   => '_codo_date',
-                'value' => $date,
-            ),
-        ),
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    ) );
-
-    if ( ! $q->have_posts() ) {
+function codo_is_time_slot_conflict( $date, $time ) {
+    if ( empty( $date ) || empty( $time ) ) {
         return false;
     }
 
-    foreach ( $q->posts as $existing_id ) {
-        $ex_time     = get_post_meta( $existing_id, '_codo_time', true );
-        $ex_duration = intval( get_post_meta( $existing_id, '_codo_duration', true ) );
-        if ( empty( $ex_time ) ) {
-            continue;
-        }
-        $ex_start = codo_datetime_to_timestamp( $date, $ex_time );
-        $ex_end   = $ex_start + ( $ex_duration * 60 );
+    // Query all bookings on the same date
+    $bookings = get_posts([
+        'post_type'      => 'codo_booking',
+        'post_status'    => ['publish', 'pending'],
+        'numberposts'    => -1,
+        'meta_query'     => [
+            'relation' => 'AND',
+            [
+                'key'   => '_codo_date',
+                'value' => $date,
+            ],
+            [
+                'key'   => '_codo_status',
+                'value' => 'cancelled',
+                'compare' => '!=',
+            ],
+        ],
+        'fields'         => 'ids',
+    ]);
 
-        // Overlap condition:
-        // If requested start < existing end AND requested end > existing start => overlap
-        if ( $req_start < $ex_end && $req_end > $ex_start ) {
+    if ( empty( $bookings ) ) {
+        return false;
+    }
+
+    foreach ( $bookings as $booking_id ) {
+        $booked_time = get_post_meta( $booking_id, '_codo_time', true );
+
+        // If exact same time already exists → conflict
+        if ( trim( $booked_time ) === trim( $time ) ) {
             return true;
         }
     }
 
-    return false; // no conflicts
+    return false; // no conflict found
 }
+
 
 /**
  * Count how many active bookings a user has that are linked to a given PMPro level (or any level if $level_id is null).

@@ -9,12 +9,12 @@ function codo_pmpro_checkout_fields() {
     $level_id = 0;
 
     // PMPro stores selected level in $_REQUEST['level'] during checkout
-    if ( isset( $_REQUEST['level'] ) ) {
-        $level_id = intval( $_REQUEST['level'] );
+    if ( isset( $_REQUEST['pmpro_level'] ) ) {
+        $level_id = intval( $_REQUEST['pmpro_level'] );
     }
-
+    
     // Check if bookings are enabled for this level
-    if ( ! $level_id || ! function_exists( 'codo_pmpro_level_allows_booking' ) || ! codo_pmpro_level_allows_booking( $level_id ) ) {
+    if ( ! $level_id || ! codo_pmpro_level_allows_booking( $level_id ) ) {
         return; // Booking not enabled for this level
     }
 
@@ -67,10 +67,9 @@ function codo_pmpro_validate_checkout_fields() {
 
     $date     = sanitize_text_field( $_REQUEST['booking_date'] );
     $time     = sanitize_text_field( $_REQUEST['booking_time'] );
-    $duration = isset( $_REQUEST['booking_duration'] ) ? intval( $_REQUEST['booking_duration'] ) : 30;
 
     // Robust conflict check
-    if ( function_exists( 'codo_is_time_slot_conflict' ) && codo_is_time_slot_conflict( $date, $time, $duration ) ) {
+    if ( function_exists( 'codo_is_time_slot_conflict' ) && codo_is_time_slot_conflict( $date, $time ) ) {
         pmpro_setMessage(
             esc_html__( 'The selected booking time overlaps with an existing booking. Please choose a different slot.', 'codo-bookings' ),
             'pmpro_error'
@@ -140,17 +139,6 @@ function codo_pmpro_after_checkout_capture( $user_id, $order ) {
     }
 
     $level_title = $level->id > 0 && function_exists('pmpro_getLevel') ? pmpro_getLevel( $level->id )->name : esc_html__( 'General Bookings', 'codo-bookings' );
-
-    // Enforce max bookings per level (optional)
-    if ( function_exists( 'codo_pmpro_level_max_bookings' ) ) {
-        $max = codo_pmpro_level_max_bookings( $level->id );
-        if ( $max > 0 && function_exists( 'codo_user_bookings_count_for_level' ) ) {
-            $count = codo_user_bookings_count_for_level( $user_id, $level->id );
-            if ( $count >= $max ) {
-                return;
-            }
-        }
-    }
 
     // Create booking post
     $post_id = wp_insert_post( array(

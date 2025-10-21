@@ -42,7 +42,7 @@ function codo_send_booking_notifications( $booking_id ) {
     );
 
     $message_user = sprintf(
-        "Hello %s,\n\nYour booking has been successfully recorded.\n\nBooking Details:\nService: %s\nDate: %s\nTime: %s\n\n\nThank you for booking with us!\n\nBooking ID: %d",
+        "Hello %s,\n\nYour booking has been successfully recorded.\n\nBooking Details:\nService: %s\nDate: %s\nTime: %s\n\nYour Google Meet link will be emailed to you 10 minutes before your scheduled session\n\n\nThank you for booking with us!\n\nBooking ID: %d",
         $user_name,
         $level_title,
         $date,

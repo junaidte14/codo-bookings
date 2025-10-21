@@ -82,7 +82,7 @@ function codo_booking_levels_shortcode( $atts ) {
                 <h3 style="margin-top:0;"><?php echo esc_html( $level->name ); ?></h3>
                 <p style="font-size:14px; color:#555;"><?php echo wp_kses_post( $level->description ); ?></p>
                 <p style="font-weight:bold; font-size:16px;"><?php echo pmpro_formatPrice( $level->initial_payment ); ?></p>
-                <a href="<?php echo esc_url( pmpro_url( 'checkout', '?level=' . $level->id ) ); ?>" class="codo-booking-btn" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#0073aa; color:#fff; text-decoration:none; border-radius:5px;">
+                <a href="<?php echo esc_url( pmpro_url( 'checkout', '?pmpro_level=' . $level->id ) ); ?>" class="codo-booking-btn" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#0073aa; color:#fff; text-decoration:none; border-radius:5px;">
                     <?php esc_html_e( 'Book Now', 'codo-bookings' ); ?>
                 </a>
             </div>
