@@ -105,6 +105,11 @@ function codo_bookings_generate_calendar( $month = null, $year = null ) {
 
     // --- Calendar grid ---
     echo '<div class="codo-calendar-grid">';
+    // --- Weekday headers ---
+    $weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    foreach ( $weekdays as $wd ) {
+        echo '<div class="codo-weekday-header">'.esc_html( $wd ).'</div>'; // Show first letter (M, T, W…)
+    }
     $start_weekday = date('N', strtotime("$year-$month-01"));
     for ( $i = 1; $i < $start_weekday; $i++ ) {
         echo '<div class="codo-empty"></div>';

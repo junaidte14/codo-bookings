@@ -42,7 +42,15 @@ add_action( 'pmpro_save_membership_level', 'codo_save_pmpro_level_settings' );
  * Helper function: Check if a level allows bookings
  */
 function codo_pmpro_level_allows_booking( $level_id ) {
-    $allow = get_option( 'codo_pmpro_level_' . $level_id . '_allow_booking', 1 );
-    return ( $allow == 1 );
+    $option_name = 'codo_pmpro_level_' . $level_id . '_allow_booking';
+    $value = get_option( $option_name, null );
+
+    // If option doesn't exist, return false
+    if ( $value === null ) {
+        return false;
+    }
+
+    return ( intval( $value ) === 1 );
 }
+
 

@@ -45,3 +45,10 @@
   margin-top: 10px;
   font-weight: bold;
 }
+.codo-nav-month {
+    padding: 5px;
+    cursor: pointer;
+}
+.codo-weekday-header {
+    text-align: center;
+}
