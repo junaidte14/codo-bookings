@@ -1,86 +1,46 @@
 <?php
 /**
- * Plugin Name:       CodoBookings – PMPro Extension (Bookings)
- * Plugin URI:        https://www.codoplex.com/codo-bookings
- * Description:       Booking & scheduling extension that integrates with Paid Memberships Pro (PMPro). Handles time slots, bookings, admin UI and notifications. PMPro handles memberships/payments.
- * Version:           1.0.0
- * Author:            Codoplex
- * Author URI:        https://www.codoplex.com
- * Text Domain:       codo-bookings
- * Domain Path:       /languages
- * License:           GPLv2 or later
- */
+* Plugin Name: CodoBookings - Booking Management System for WordPress
+* Plugin URI: https://codoplex.com/
+* Description: Extensible booking system with multiple calendars, timezone-aware slots, Google Meet integration (via Calendar), payments hooks (PMPro/WooCommerce friendly), capacities, buffers, recurring availability, exceptions, CSV export and reports. Procedural, modular, with many actions/filters for extensibility.
+* Version: 1.1.0
+* Author: CODOPLEX
+* License: GPLv2+
+*/
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Constants
+define( 'CODOBOOKINGS_VERSION', '1.1.0' );
+define( 'CODOBOOKINGS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'CODOBOOKINGS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+// Includes
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/admin/menu.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/core/post-types.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/core/metaboxes.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/admin/list-tables.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/admin/settings.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/core/bookings-post-type.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/core/ajax-handlers.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/frontend/shortcodes.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/integrations/google-calendar.php';
+
+
+register_activation_hook( __FILE__, 'codobookings_activate' );
+function codobookings_activate() {
+    codobookings_register_post_types();
+    // create DB table for occurrences or reports if desired via action
+    do_action( 'codobookings_activate' );
+    flush_rewrite_rules();
 }
-
-define( 'CODO_BOOKINGS_VERSION', '1.0.0' );
-define( 'CODO_BOOKINGS_DIR', plugin_dir_path( __FILE__ ) );
-define( 'CODO_BOOKINGS_URL', plugin_dir_url( __FILE__ ) );
-
-// -----------------------------------------------------------------------------
-// Basic dependency check: Paid Memberships Pro
-// -----------------------------------------------------------------------------
-add_action( 'plugins_loaded', 'codo_bookings_plugins_loaded' );
-function codo_bookings_plugins_loaded() {
-    // If PMPro is not active, show admin notice and still load core minimal functionality.
-    if ( ! class_exists( 'PMPro' ) && ! function_exists( 'pmpro_hasMembershipLevel' ) ) {
-        add_action( 'admin_notices', 'codo_bookings_admin_notice_pmpro_missing' );
-    }
-}
-
-function codo_bookings_admin_notice_pmpro_missing() {
-    if ( ! current_user_can( 'activate_plugins' ) ) {
-        return;
-    }
-    ?>
-    <div class="notice notice-warning is-dismissible">
-        <p>
-            <?php esc_html_e( 'CodoBookings is active but requires Paid Memberships Pro (PMPro) to operate as an extension. Please install & activate PMPro.', 'codo-bookings' ); ?>
-        </p>
-    </div>
-    <?php
-}
-
-// -----------------------------------------------------------------------------
-// Include core files (CPT, admin, frontend, integration)
-// -----------------------------------------------------------------------------
-require_once CODO_BOOKINGS_DIR . 'includes/core/cpt-register.php';
-require_once CODO_BOOKINGS_DIR . 'includes/core/meta-boxes.php';
-require_once CODO_BOOKINGS_DIR . 'includes/core/helpers.php';
-require_once CODO_BOOKINGS_DIR . 'includes/core/emails.php';
-
-require_once CODO_BOOKINGS_DIR . 'includes/frontend/shortcodes.php';
-
-require_once CODO_BOOKINGS_DIR . 'includes/admin/admin-menu.php';
-require_once CODO_BOOKINGS_DIR . 'includes/admin/booking-list-columns.php';
-require_once CODO_BOOKINGS_DIR . 'includes/admin/settings-bookings.php';
-
-/**
- * Load PMPro integration after all plugins are initialized
- */
-function codo_bookings_load_pmpro_integration() {
-    if ( function_exists( 'pmpro_hasMembershipLevel' ) || class_exists( 'PMPro' ) ) {
-        require_once CODO_BOOKINGS_DIR . 'includes/integration/pmpro-hooks.php';
-        require_once CODO_BOOKINGS_DIR . 'includes/integration/pmpro-level-settings.php';
-        require_once CODO_BOOKINGS_DIR . 'includes/integration/calendar-view.php';
-    } else {
-        // Optional: Log or note that PMPro not active
-        error_log( 'CodoBookings: PMPro not detected at load time.' );
-    }
-}
-add_action( 'plugins_loaded', 'codo_bookings_load_pmpro_integration', 20 );
-
-// Activation / Deactivation hooks
-register_activation_hook( __FILE__, 'codo_bookings_activate' );
-function codo_bookings_activate() {
-    // Ensure CPTs are registered on activation
-    codo_register_booking_cpt();
+register_deactivation_hook( __FILE__, 'codobookings_deactivate' );
+function codobookings_deactivate() {
     flush_rewrite_rules();
 }
 
-register_deactivation_hook( __FILE__, 'codo_bookings_deactivate' );
-function codo_bookings_deactivate() {
-    flush_rewrite_rules();
-}
+// Load textdomain
+add_action( 'init', function(){ load_plugin_textdomain( 'codobookings', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' ); } );
+
+// Provide default capability mapping filter
+add_filter( 'codobookings_capability', function( $cap ){ return $cap ?: 'manage_options'; } );
