@@ -53,22 +53,3 @@ function codobookings_handle_booking_status_change( $post_id, $post ) {
     $status = get_post_meta( $post_id, '_codo_status', true );
     do_action( 'codobookings_booking_status_changed', $post_id, $status );
 }
-
-// Export bookings CSV (admin action)
-add_action( 'admin_post_codobookings_export_csv', 'codobookings_export_csv' );
-function codobookings_export_csv() {
-    if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Forbidden' );
-    $args = array( 'post_type' => 'codo_booking', 'posts_per_page' => -1 );
-    $q = new WP_Query( $args );
-    header( 'Content-Type: text/csv' );
-    header( 'Content-Disposition: attachment; filename="codobookings_bookings.csv"' );
-    $out = fopen( 'php://output', 'w' );
-    fputcsv( $out, array( 'ID','Calendar','Start','End','Status','Email' ) );
-    while ( $q->have_posts() ) { $q->the_post();
-        $id = get_the_ID();
-        $row = array( $id, get_the_title( get_post_meta( $id, '_codo_calendar_id', true ) ), get_post_meta( $id, '_codo_start', true ), get_post_meta( $id, '_codo_end', true ), get_post_meta( $id, '_codo_status', true ), get_post_meta( $id, '_codo_attendee_email', true ) );
-        fputcsv( $out, $row );
-    }
-    wp_reset_postdata();
-    exit;
-}

@@ -36,14 +36,42 @@ function codobookings_booking_times_meta_box( $post ) {
     $start_local = $start_dt ? $start_dt->setTimezone($tz)->format('Y-m-d H:i') : '';
     $end_local   = $end_dt   ? $end_dt->setTimezone($tz)->format('Y-m-d H:i')   : '';
 
+    $start_local_st = $start_dt ? $start_dt->setTimezone($tz)->format('H:i') : '';
+    $end_local_st   = $end_dt   ? $end_dt->setTimezone($tz)->format('H:i')   : '';
+
+
+    // Determine recurrence label
+    $recurrence_label = '';
+    $day_display = ucfirst( esc_html( $rec_days ?: 'unspecified day' ) );
+
+    if ( $recurrence === 'weekly' ) {
+        $recurrence_label = sprintf(
+            __('📅 This is a <strong>Weekly Recurring Booking</strong> every <strong>%s</strong> from <strong>%s</strong> to <strong>%s</strong> (Local Time).', 'codobookings'),
+            $day_display,
+            esc_html( $start_local_st ),
+            esc_html( $end_local_st )
+        );
+    } else {
+        $recurrence_label = __('🕐 This is a <strong>One-Time Booking</strong>.', 'codobookings');
+    }
+
     ?>
+    <div style="background:#f6f7f7; border:1px solid #ccd0d4; padding:12px 15px; margin-bottom:15px; border-radius:4px;">
+        <?php echo wp_kses_post( $recurrence_label ); ?>
+    </div>
     <p>
         <label for="codo_start"><?php _e('Start Time', 'codobookings'); ?></label><br>
         <input type="datetime-local" id="codo_start" name="codo_start" value="<?php echo esc_attr($start_local); ?>" style="width:100%;">
     </p>
     <p>
+        <em><?php _e('Times are shown in your WordPress admin timezone.', 'codobookings'); ?></em>
+    </p>
+    <p>
         <label for="codo_end"><?php _e('End Time', 'codobookings'); ?></label><br>
         <input type="datetime-local" id="codo_end" name="codo_end" value="<?php echo esc_attr($end_local); ?>" style="width:100%;">
+    </p>
+    <p>
+        <em><?php _e('Times are shown in your WordPress admin timezone.', 'codobookings'); ?></em>
     </p>
     <p>
         <label for="codo_email"><?php _e('Email', 'codobookings'); ?></label><br>
@@ -60,9 +88,7 @@ function codobookings_booking_times_meta_box( $post ) {
             ?>
         </select>
     </p>
-    <p>
-        <em><?php _e('Times are shown in your WordPress admin timezone.', 'codobookings'); ?></em>
-    </p>
+    
     <?php
 }
 

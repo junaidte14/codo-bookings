@@ -253,7 +253,7 @@
 
     function getSlotsForDate(dateStr, data) {
         const dt = new Date(dateStr);
-        const dow = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][dt.getDay()];
+        const dow = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'][dt.getDay()];
 
         return (data.slots || []).filter(s => s.day.toLowerCase() === dow);
     }
@@ -273,9 +273,10 @@
         nextBtn.addEventListener('click',()=>renderOneTimeCalendar(root,data,monthOffset+1));
 
         const table=document.createElement('table'); table.className='codo-onetime-calendar';
-        const trHeader=document.createElement('tr'); ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; trHeader.appendChild(th); });
+        const trHeader=document.createElement('tr'); ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; trHeader.appendChild(th); });
         table.appendChild(trHeader);
-        const firstDay=new Date(year,month,1).getDay();
+        let firstDay=new Date(year,month,1).getDay();
+        firstDay = (firstDay + 6) % 7;
         const daysInMonth=new Date(year,month+1,0).getDate();
         let dayCount=1;
 
