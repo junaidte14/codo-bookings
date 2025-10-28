@@ -17,9 +17,21 @@ function codobookings_calendar_shortcode( $atts ) {
 
     // Enqueue frontend assets
     wp_enqueue_style( 'codobookings-frontend', CODOBOOKINGS_PLUGIN_URL . 'assets/css/calendar-frontend.css', array(), CODOBOOKINGS_VERSION );
-    wp_enqueue_script( 'codobookings-frontend', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar-frontend.js', array(), CODOBOOKINGS_VERSION, true );
+    // JS dependency chain
+    wp_enqueue_script( 'codobookings-utils', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/utils.js', array(), CODOBOOKINGS_VERSION, true );
+    wp_enqueue_script( 'codobookings-api', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/api.js', array('codobookings-utils'), CODOBOOKINGS_VERSION, true );
+    wp_enqueue_script( 'codobookings-sidebar', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/sidebar.js', array('codobookings-utils'), CODOBOOKINGS_VERSION, true );
+    wp_enqueue_script( 'codobookings-calendar-weekly', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/calendar-weekly.js', array('codobookings-api','codobookings-sidebar'), CODOBOOKINGS_VERSION, true );
+    wp_enqueue_script( 'codobookings-calendar-onetime', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/calendar-onetime.js', array('codobookings-api','codobookings-sidebar'), CODOBOOKINGS_VERSION, true );
+    wp_enqueue_script( 'codobookings-main', CODOBOOKINGS_PLUGIN_URL . 'assets/js/calendar/main.js', array(
+        'codobookings-utils',
+        'codobookings-api',
+        'codobookings-sidebar',
+        'codobookings-calendar-weekly',
+        'codobookings-calendar-onetime'
+    ), CODOBOOKINGS_VERSION, true );
 
-    wp_localize_script( 'codobookings-frontend', 'CODOBookingsData', array(
+    wp_localize_script( 'codobookings-main', 'CODOBookingsData', array(
         'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
         'nonce'      => wp_create_nonce( 'codobookings_nonce' ),
         'calendarId' => $calendar_id,

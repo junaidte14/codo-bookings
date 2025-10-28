@@ -2,6 +2,81 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
+ * Google Calendar Integration
+ */
+
+/**
+ * =============================================
+ *  Google Calendar Settings Extension
+ * =============================================
+ */
+
+// Register Google API settings
+add_action( 'admin_init', 'codobookings_register_google_settings' );
+function codobookings_register_google_settings() {
+    register_setting( 'codobookings_options', 'codobookings_google_client_id', [
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    register_setting( 'codobookings_options', 'codobookings_google_client_secret', [
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    register_setting( 'codobookings_options', 'codobookings_google_refresh_token', [
+        'type' => 'string',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+}
+
+// Register the tab itself
+add_filter( 'codobookings_settings_tabs', 'codobookings_add_google_calendar_tab' );
+function codobookings_add_google_calendar_tab( $tabs ) {
+    $tabs['google_calendar'] = [
+        'label'    => __( 'Google Calendar', 'codobookings' ),
+        'callback' => 'codobookings_render_google_calendar_tab',
+    ];
+    return $tabs;
+}
+
+// Render the tab
+function codobookings_render_google_calendar_tab() {
+    ?>
+    <table class="form-table">
+        <tr><th colspan="2"><h2><?php _e( 'Google API (OAuth)', 'codobookings' ); ?></h2></th></tr>
+        <tr>
+            <th><?php _e( 'Client ID', 'codobookings' ); ?></th>
+            <td>
+                <input type="text" name="codobookings_google_client_id"
+                    value="<?php echo esc_attr( get_option( 'codobookings_google_client_id' ) ); ?>" style="width:100%">
+            </td>
+        </tr>
+        <tr>
+            <th><?php _e( 'Client Secret', 'codobookings' ); ?></th>
+            <td>
+                <input type="text" name="codobookings_google_client_secret"
+                    value="<?php echo esc_attr( get_option( 'codobookings_google_client_secret' ) ); ?>" style="width:100%">
+            </td>
+        </tr>
+        <tr>
+            <th><?php _e( 'Refresh Token', 'codobookings' ); ?></th>
+            <td>
+                <input type="text" name="codobookings_google_refresh_token"
+                    value="<?php echo esc_attr( get_option( 'codobookings_google_refresh_token' ) ); ?>" style="width:100%">
+                <p class="description">
+                    <?php
+                        printf(
+                            __( 'Need help? Follow <a href="%s" target="_blank">Google API Console OAuth instructions</a> to create credentials and get your refresh token.', 'codobookings' ),
+                            esc_url( 'https://developers.google.com/calendar/api/quickstart/js' )
+                        );
+                    ?>
+                </p>
+            </td>
+        </tr>
+    </table>
+    <?php
+}
+
+/**
  * Create Google Calendar event to obtain Google Meet link using stored refresh token.
  * This implementation uses Google Calendar REST API and expects a refresh token stored in options.
  * NOTE: For production scenarios, implement proper OAuth flow with token storage per-account and secure handling.
