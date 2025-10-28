@@ -10,7 +10,7 @@ function codobookings_create_booking( $data ) {
         'start'          => '',
         'end'            => '',
         'recurrence'     => '',
-        'recurrence_day' => '',
+        'day' => '',
         'status'         => 'pending',
         'email'          => '',
         'meta'           => [],
@@ -34,7 +34,7 @@ function codobookings_create_booking( $data ) {
     update_post_meta( $id, '_codo_start', sanitize_text_field( $data['start'] ) );
     update_post_meta( $id, '_codo_end', sanitize_text_field( $data['end'] ) );
     update_post_meta( $id, '_codo_recurrence', sanitize_text_field( $data['recurrence'] ) );
-    update_post_meta( $id, '_codo_recurrence_day', sanitize_text_field( $data['recurrence_day'] ) );
+    update_post_meta( $id, '_codo_day', sanitize_text_field( $data['day'] ) );
     update_post_meta( $id, '_codo_status', sanitize_text_field( $data['status'] ) );
     update_post_meta( $id, '_codo_attendee_email', sanitize_email( $data['email'] ) );
     update_post_meta( $id, '_codo_meta', $data['meta'] );

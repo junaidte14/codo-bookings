@@ -25,7 +25,8 @@ function codobookings_booking_times_meta_box( $post ) {
     $email     = get_post_meta( $post->ID, '_codo_attendee_email', true );
     $status    = get_post_meta( $post->ID, '_codo_status', true );
     $recurrence = get_post_meta( $post->ID, '_codo_recurrence', true ); // 'none' or 'weekly'
-    $rec_days   = get_post_meta( $post->ID, '_codo_recurrence_day', true );
+    $rec_days   = get_post_meta( $post->ID, '_codo_day', true );
+    //var_dump($rec_days);
 
     // Convert UTC → Admin timezone
     $tz = new DateTimeZone( get_option('timezone_string') ?: 'UTC' );

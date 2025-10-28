@@ -102,7 +102,7 @@
 /* Sidebar below calendar */
 .codo-calendar-sidebar {
     position: relative;           /* relative to calendar */
-    width: 100%;                  /* full width under calendar */
+    width: 96%;                  /* full width under calendar */
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;

@@ -24,29 +24,31 @@
     function renderSidebar(slots, label, type, root) {
         if (!Array.isArray(slots)) slots = [slots];
 
-        let sidebar = document.querySelector('.codo-calendar-sidebar');
+        // --- Make sidebar unique per calendar root ---
+        let sidebar = root.querySelector('.codo-calendar-sidebar');
         if (!sidebar) {
             sidebar = document.createElement('div');
             sidebar.className = 'codo-calendar-sidebar';
+            sidebar.dataset.calendarId = root.dataset.calendarId; // store calendar ID
             root.appendChild(sidebar);
             // Trigger animation
             requestAnimationFrame(() => {
                 sidebar.classList.add('visible');
             });
 
-            // Header
+            // --- Header ---
             const header = document.createElement('div');
             header.className = 'codo-sidebar-header';
             header.innerHTML = '<strong>Booking Details</strong><br><small>Select slots and click Confirm Booking</small>';
             header.style.marginBottom = '10px';
             sidebar.appendChild(header);
 
-            // Container for slots
+            // --- Container for slots ---
             const container = document.createElement('div');
             container.className = 'codo-sidebar-container';
             sidebar.appendChild(container);
 
-            // Footer with confirm button
+            // --- Footer with confirm button ---
             const footer = document.createElement('div');
             footer.className = 'codo-sidebar-footer';
             footer.style.marginTop = '10px';
@@ -59,48 +61,62 @@
             confirmBtn.style.border = 'none';
             confirmBtn.style.borderRadius = '4px';
             confirmBtn.style.cursor = 'pointer';
-            confirmBtn.disabled = true; // initially disabled
+            confirmBtn.disabled = true;
             footer.appendChild(confirmBtn);
             sidebar.appendChild(footer);
 
             sidebar._confirmBtn = confirmBtn;
 
-            // Confirm booking click
+            // --- Confirm booking click ---
             confirmBtn.addEventListener('click', () => {
                 confirmBtn.disabled = true;
-                let email = CODOBookingsData.userEmail || ''; // logged-in user email
+                let email = CODOBookingsData.userEmail || '';
                 if (!email) {
                     email = prompt('Enter your email to confirm booking:');
-                    if (!email) return; // do nothing if no email
+                    if (!email) return;
                 }
 
-                const slotsToBook = Array.from(container.querySelectorAll('.codo-sidebar-item.selected')).map(item => ({
-                    start: item.dataset.start,
-                    end: item.dataset.end,
-                    day: item.dataset.day,
-                    calendar_id: item.dataset.calendarId
-                }));
+                const slotsToBook = Array.from(container.querySelectorAll('.codo-sidebar-item.selected')).map(item => {
+                    let recurrence_day = '';
 
-                if (!slotsToBook.length) return; // no slots selected
+                    if (type === 'weekly') {
+                        recurrence_day = item.dataset.day; // already 'monday', 'tuesday', ...
+                    } else {
+                        // For one-time booking, convert the date to day of week
+                        const dateParts = item.dataset.day.split('-'); // ['2025','10','29']
+                        const dt = new Date(dateParts[0], dateParts[1]-1, dateParts[2]); // JS months 0-indexed
+                        const daysOfWeek = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+                        recurrence_day = daysOfWeek[dt.getDay()]; // get proper lowercase weekday
+                    }
+
+                    return {
+                        start: item.dataset.start,
+                        end: item.dataset.end,
+                        day: recurrence_day, // send proper day for backend
+                        calendar_id: item.dataset.calendarId
+                    };
+                });
+
+                //console.log(slotsToBook); return;
+
+                if (!slotsToBook.length) return;
 
                 let successCount = 0;
                 let failedCount = 0;
 
                 const bookingPromises = slotsToBook.map(slotData => {
-                    // Normalize recurrence_day
-                    let recurrence_day = '';
-                    if (type === 'weekly') {
-                        recurrence_day = slotData.day;
-                    }
+                    let day = '';
+                    day = slotData.day;
+
                     const fd = new FormData();
                     fd.append('action', 'codobookings_create_booking');
                     fd.append('nonce', CODOBookingsData.nonce);
-                    fd.append('calendar_id', slotData.calendar_id);
-                    fd.append('start', slotData.start); // UTC
-                    fd.append('end', slotData.end);     // UTC
+                    fd.append('calendar_id', slotData.calendar_id); // correct calendar
+                    fd.append('start', slotData.start);
+                    fd.append('end', slotData.end);
                     fd.append('email', email);
-                    fd.append('recurrence_day', recurrence_day);
-                    //console.log(recurrence_day);return;
+                    fd.append('day', day);
+
                     return fetch(CODOBookingsData.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: fd })
                         .then(r => r.json())
                         .then(resp => {
@@ -109,12 +125,11 @@
                         })
                         .catch(() => failedCount++);
                 });
+
                 Promise.all(bookingPromises).then(() => {
-                    // Clear current sidebar content
                     container.innerHTML = '';
                     confirmBtn.disabled = true;
 
-                    // Create message container
                     const messageBox = document.createElement('div');
                     messageBox.className = 'codo-booking-message';
                     messageBox.style.padding = '15px';
@@ -129,7 +144,6 @@
 
                     messageBox.innerHTML = `<p>${msg.join('<br>')}</p>`;
 
-                    // Add "Book Again" button
                     const rebookBtn = document.createElement('button');
                     rebookBtn.textContent = 'Book Again';
                     rebookBtn.style.marginTop = '10px';
@@ -149,9 +163,9 @@
                     container.appendChild(messageBox);
                 });
             });
-
         }
 
+        // --- Render slots inside this calendar's sidebar ---
         const container = sidebar.querySelector('.codo-sidebar-container');
         const confirmBtn = sidebar._confirmBtn;
 
@@ -164,11 +178,21 @@
 
             const item = document.createElement('div');
             item.className = 'codo-sidebar-item';
-            item.dataset.start = slot.start;
-            item.dataset.end = slot.end;
+            // Determine if this is weekly or one-time
+            const isWeekly = type === 'weekly';
+            // For weekly, store HH:MM; for one-time, store full datetime
+            if (isWeekly) {
+                item.dataset.start = slot.start; // HH:MM
+                item.dataset.end   = slot.end;   // HH:MM
+            } else {
+                // full UTC datetime for one-time slots
+                item.dataset.start = label + ' ' + slot.start + ':00'; // YYYY-MM-DD HH:MM:SS
+                item.dataset.end   = label + ' ' + slot.end + ':00';
+            }
             item.dataset.day = label;
-            item.dataset.calendarId = CODOBookingsData.calendarId;
-            item.dataset.slotKey = slotKey;
+            item.dataset.calendarId = root.dataset.calendarId; // correct calendar
+            item.dataset.slotKey = `${slot.day}-${slot.start}-${slot.end}`;
+
             item.innerHTML = `
                 <strong>${type === 'weekly' ? 'Every ' + label : label}</strong><br>
                 ${slot.start}-${slot.end} UTC / ${localStart}-${localEnd} Local
@@ -177,7 +201,6 @@
 
             const removeBtn = item.querySelector('.remove-slot');
 
-            // Click on slot to select/deselect
             item.addEventListener('click', () => {
                 const selected = item.classList.toggle('selected');
                 removeBtn.style.display = selected ? 'inline-block' : 'none';
@@ -198,6 +221,7 @@
             confirmBtn.disabled = container.querySelectorAll('.codo-sidebar-item.selected').length === 0;
         }
     }
+
 
     function renderWeeklyCalendar(root,data){
         const days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -290,6 +314,7 @@
             const calId=root.dataset.calendarId;
             root.innerHTML=`<div class="codo-calendar-loading">${CODOBookingsData.i18n.loading}</div>`;
             fetchCalendar(calId).then(data=>{
+                console.log(data);
                 if(data.recurrence==='weekly') renderWeeklyCalendar(root,data);
                 else renderOneTimeCalendar(root,data);
             }).catch(err=>{ console.error(err); root.innerHTML=`<div class="codo-calendar-error">${CODOBookingsData.i18n.failed}</div>`; });

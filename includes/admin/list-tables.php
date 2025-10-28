@@ -65,7 +65,7 @@ function codobookings_booking_columns_data( $column, $post_id ) {
         }
 
         $recurrence = get_post_meta( $post_id, '_codo_recurrence', true ); // 'none' or 'weekly'
-        $rec_day    = get_post_meta( $post_id, '_codo_recurrence_day', true );
+        $rec_day    = get_post_meta( $post_id, '_codo_day', true );
 
         $start_utc = get_post_meta( $post_id, '_codo_start', true );
         $end_utc   = get_post_meta( $post_id, '_codo_end', true );
@@ -116,7 +116,6 @@ function codobookings_booking_columns_data( $column, $post_id ) {
             $end_local   = $end_dt ? $end_dt->setTimezone( $wp_tz ) : null;
 
             echo '<div>';
-            //echo '<strong>Every:</strong> ' . esc_html( ucfirst($rec_day) ) . '<br>';
             echo '<strong>UTC:</strong> Every ' . esc_html( ucfirst($rec_day) ) . ' ' . esc_html($start_dt->format('H:i'));
             if ( $end_dt ) echo ' - ' . esc_html($end_dt->format('H:i'));
             echo '<br>';
