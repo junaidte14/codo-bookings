@@ -1,5 +1,5 @@
 (function(){
-    const daysOfWeek=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const daysOfWeek=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
     function el(q,parent){return (parent||document).querySelector(q);}
 
@@ -253,60 +253,89 @@
 
     function getSlotsForDate(dateStr, data) {
         const dt = new Date(dateStr);
-        const dow = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'][dt.getDay()];
-
+        const dow = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][dt.getDay()];
+        
         return (data.slots || []).filter(s => s.day.toLowerCase() === dow);
     }
 
 
-    function renderOneTimeCalendar(root,data,monthOffset=0){
+    function renderOneTimeCalendar(root, data, monthOffset = 0) {
         //console.log(data);
-        const now=new Date(); const today=new Date(); today.setHours(0,0,0,0);
-        const current=new Date(now.getFullYear(),now.getMonth()+monthOffset,1);
-        const year=current.getFullYear(); const month=current.getMonth();
-        const header=document.createElement('div'); header.className='codo-calendar-header';
-        const prevBtn=document.createElement('button'); prevBtn.textContent='« Prev';
-        const nextBtn=document.createElement('button'); nextBtn.textContent='Next »';
-        const title=document.createElement('span'); title.textContent=current.toLocaleString('default',{month:'long',year:'numeric'});
-        header.append(prevBtn,title,nextBtn); root.innerHTML=''; root.appendChild(header);
-        prevBtn.addEventListener('click',()=>renderOneTimeCalendar(root,data,monthOffset-1));
-        nextBtn.addEventListener('click',()=>renderOneTimeCalendar(root,data,monthOffset+1));
+        const now = new Date();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        const table=document.createElement('table'); table.className='codo-onetime-calendar';
-        const trHeader=document.createElement('tr'); ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{ const th=document.createElement('th'); th.textContent=d; trHeader.appendChild(th); });
+        const current = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+        const year = current.getFullYear();
+        const month = current.getMonth();
+        const firstDay = (new Date(year, month, 1).getDay() + 6) % 7; // Monday = 0
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // --- Header ---
+        const header = document.createElement('div');
+        header.className = 'codo-calendar-header';
+        const prevBtn = document.createElement('button'); prevBtn.textContent = '« Prev';
+        const nextBtn = document.createElement('button'); nextBtn.textContent = 'Next »';
+        const title = document.createElement('span');
+        title.textContent = current.toLocaleString('default', { month: 'long', year: 'numeric' });
+        header.append(prevBtn, title, nextBtn);
+        root.innerHTML = ''; root.appendChild(header);
+
+        prevBtn.addEventListener('click', () => renderOneTimeCalendar(root, data, monthOffset - 1));
+        nextBtn.addEventListener('click', () => renderOneTimeCalendar(root, data, monthOffset + 1));
+
+        // --- Table ---
+        const table = document.createElement('table');
+        table.className = 'codo-onetime-calendar';
+        const trHeader = document.createElement('tr');
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(d => {
+            const th = document.createElement('th'); th.textContent = d;
+            trHeader.appendChild(th);
+        });
         table.appendChild(trHeader);
-        let firstDay=new Date(year,month,1).getDay();
-        firstDay = (firstDay + 6) % 7;
-        const daysInMonth=new Date(year,month+1,0).getDate();
-        let dayCount=1;
 
-        for(let w=0; w<6; w++){
-            const tr=document.createElement('tr');
-            for(let dow=0; dow<7; dow++){
-                const td=document.createElement('td'); td.style.position='relative';
-                if((w===0 && dow<firstDay) || dayCount>daysInMonth){ td.textContent=''; }
-                else{
-                    const dateStr=`${year}-${('0'+(month+1)).slice(-2)}-${('0'+dayCount).slice(-2)}`;
-                    const daySlots=getSlotsForDate(dateStr,data);
-                    //console.log(daySlots);
-                    td.innerHTML=`<div class="codo-calendar-date">${dayCount}</div>`;
-                    const cellDate=new Date(year,month,dayCount); cellDate.setHours(0,0,0,0);
-                    if(cellDate<today) td.classList.add('past');
+        let dayCounter = 1;
+        for (let w = 0; w < 6; w++) {
+            const tr = document.createElement('tr');
+            for (let dow = 0; dow < 7; dow++) {
+                const td = document.createElement('td');
+                td.style.position = 'relative';
 
-                    if(daySlots.length && cellDate>=today){
+                // Compute the "date index" for this cell
+                const cellIndex = w * 7 + dow;
+                const dayNumber = cellIndex - firstDay + 1;
+
+                if (dayNumber < 1 || dayNumber > daysInMonth) {
+                    td.textContent = '';
+                } else {
+                    const dateStr = `${year}-${('0' + (month + 1)).slice(-2)}-${('0' + dayNumber).slice(-2)}`;
+                    const daySlots = getSlotsForDate(dateStr, data);
+                    td.innerHTML = `<div class="codo-calendar-date">${dayNumber}</div>`;
+
+                    const cellDate = new Date(year, month, dayNumber);
+                    cellDate.setHours(0, 0, 0, 0);
+
+                    if (cellDate < today) td.classList.add('past');
+
+                    if (daySlots.length && cellDate >= today) {
                         td.classList.add('available');
-                        const tooltip=document.createElement('div'); tooltip.className='codo-calendar-tooltip';
-                        tooltip.innerHTML=daySlots.map(s=>`${s.start}-${s.end} UTC / ${formatTimeToLocal(s.start)}-${formatTimeToLocal(s.end)} Local`).join('<br>');
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'codo-calendar-tooltip';
+                        tooltip.innerHTML = daySlots.map(s => 
+                            `${s.start}-${s.end} UTC / ${formatTimeToLocal(s.start)}-${formatTimeToLocal(s.end)} Local`
+                        ).join('<br>');
                         td.appendChild(tooltip);
 
-                        td.addEventListener('click',()=>daySlots.forEach(s=>renderSidebar(s,dateStr,'none',root)));
+                        td.addEventListener('click', () => 
+                            daySlots.forEach(s => renderSidebar(s, dateStr, 'none', root))
+                        );
                     }
-                    dayCount++;
                 }
                 tr.appendChild(td);
             }
             table.appendChild(tr);
         }
+
         root.appendChild(table);
     }
 
@@ -315,7 +344,7 @@
             const calId=root.dataset.calendarId;
             root.innerHTML=`<div class="codo-calendar-loading">${CODOBookingsData.i18n.loading}</div>`;
             fetchCalendar(calId).then(data=>{
-                console.log(data);
+                //console.log(data);
                 if(data.recurrence==='weekly') renderWeeklyCalendar(root,data);
                 else renderOneTimeCalendar(root,data);
             }).catch(err=>{ console.error(err); root.innerHTML=`<div class="codo-calendar-error">${CODOBookingsData.i18n.failed}</div>`; });
