@@ -125,6 +125,17 @@ window.CodoBookings = window.CodoBookings || {};
 
                     messageBox.appendChild(rebookBtn);
                     containerEl.appendChild(messageBox);
+
+                    // ✅ Reload the calendar after booking
+                    const calendarRoot = containerEl.closest('.codo-calendar-wrapper');
+                    if (calendarRoot && calendarRoot.dataset.calendarId) {
+                        ns.api.fetchCalendar(calendarRoot.dataset.calendarId)
+                            .then(data => {
+                                if (data.recurrence === 'weekly') ns.renderWeeklyCalendar(calendarRoot, data);
+                                else ns.renderOneTimeCalendar(calendarRoot, data);
+                            })
+                            .catch(err => console.error('Failed to reload calendar:', err));
+                    }
                 });
             });
         }
