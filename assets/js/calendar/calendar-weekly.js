@@ -8,7 +8,11 @@ window.CodoBookings = window.CodoBookings || {};
         const days = ns.utils.daysOfWeek();
         const table = document.createElement('table'); table.className = 'codo-weekly-calendar';
         const thead = document.createElement('thead'); const headerRow = document.createElement('tr');
-        days.forEach(d => { const th = document.createElement('th'); th.textContent = d; headerRow.appendChild(th); });
+        days.forEach(d => { 
+            const th = document.createElement('th'); 
+            th.textContent = d.slice(0,3); // Only first 3 letters
+            headerRow.appendChild(th); 
+        });
         thead.appendChild(headerRow); table.appendChild(thead);
         const tbody = document.createElement('tbody'); const row = document.createElement('tr');
 

@@ -8,7 +8,7 @@ function codobookings_calendar_columns( $cols ) {
         'cb'        => $cols['cb'],
         'title'     => __( 'Calendar', 'codobookings' ),
         'shortcode' => __( 'Shortcode', 'codobookings' ),
-        'slots'     => __( 'Slots', 'codobookings' ),
+        'recurrence'     => __( 'Recurrence', 'codobookings' ),
         'date'      => $cols['date'],
     );
     return $cols;
@@ -17,14 +17,14 @@ function codobookings_calendar_columns( $cols ) {
 add_action( 'manage_codo_calendar_posts_custom_column', 'codobookings_calendar_columns_data', 10, 2 );
 function codobookings_calendar_columns_data( $column, $post_id ) {
     if ( $column === 'shortcode' ) {
-        echo '<code>[codo_calendar id=' . esc_attr( $post_id ) . ']</code>';
+        echo '<code>[codo_calendar id="' . esc_attr( $post_id ) . '"]</code>';
     }
-    if ( $column === 'slots' ) {
-        $slots = get_post_meta( $post_id, '_codo_slots', true );
-        if ( is_array( $slots ) ) {
-            echo count( $slots ) . ' ' . __( 'rules', 'codobookings' );
+    if ( $column === 'recurrence' ) {
+        $recurrence = get_post_meta( $post_id, '_codo_recurrence', true );
+        if ( $recurrence == 'weekly' ) {
+            echo 'Weekly Bookings';
         } else {
-            echo '-';
+            echo 'None (One-Time Bookings)';
         }
     }
 }

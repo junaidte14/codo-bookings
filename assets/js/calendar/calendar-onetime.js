@@ -55,7 +55,9 @@ window.CodoBookings = window.CodoBookings || {};
                     const cellDate = new Date(year, month, dayNumber);
                     cellDate.setHours(0,0,0,0);
 
-                    if (cellDate < today) td.classList.add('past');
+                    //if (cellDate < today) td.classList.add('past');
+                    // Mark past days (before today) or days with no slots as 'past'
+                    if (cellDate < today || daySlots.length === 0) td.classList.add('past');
 
                     if (daySlots.length && cellDate >= today){
                         td.classList.add('available');
