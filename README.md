@@ -1,167 +1,118 @@
-# 🗓️ CodoBookings – WordPress Booking & PMPro Integration Plugin
+# CodoBookings
 
-**CodoBookings** is a lightweight and extensible booking management plugin for WordPress that integrates seamlessly with **Paid Memberships Pro (PMPro)** to manage time-slot-based bookings, availability calendars, and automated order linking.
-
-It’s designed for service-based businesses, consultants, or membership sites that need **slot booking + payment flow** in one place.
-
----
-
-## 📋 Table of Contents
-
-1. [Description](#-description)
-2. [Key Features](#-key-features)
-3. [How It Works](#-how-it-works)
-4. [Installation](#-installation)
-5. [Setup & Configuration](#-setup--configuration)
-6. [Usage Guide](#-usage-guide)
-7. [PMPro Integration](#-pmpro-integration)
-8. [Shortcodes](#-shortcodes)
-9. [Admin Management](#-admin-management)
-10. [Customization](#-customization)
-11. [Changelog](#-changelog)
-13. [License](#-license)
+**Contributors:** junaidte14  
+**Tags:** bookings, appointments, calendar, scheduling, standalone, pmpro-extension, woocommerce, google-calendar  
+**Requires at least:** 6.0  
+**Tested up to:** 6.7  
+**Requires PHP:** 7.4  
+**License:** GPLv2 or later  
+**License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
 
 ---
 
-## 🧭 Description
+## 🎯 Description
 
-**CodoBookings** provides an intuitive booking system where users can:
-- Select a date and time slot based on admin-defined availability.
-- Confirm the booking through **Paid Memberships Pro** checkout.
-- Have their booking automatically linked to a PMPro order.
+**CodoBookings** is a lightweight yet powerful **WordPress booking management plugin** designed for developers and site owners who want complete flexibility.  
+Originally built as a Paid Memberships Pro (PMPro) extension, it has now evolved into a **standalone booking engine**, providing the foundation for managing appointments, schedules, and customer interactions — **without requiring any dependencies**.
 
-The plugin is structured to support both free and premium booking flows, powered by the flexibility of PMPro membership levels.
+Future extensions (coming soon) will seamlessly integrate with:
+- 🧩 **Paid Memberships Pro** (membership-based bookings)
+- 🛒 **WooCommerce** (sell bookings as products)
+- 📅 **Google Calendar** (sync bookings with personal or business calendars)
+- 💬 **Email & Notifications** (customized reminders, confirmations, and admin alerts)
 
 ---
 
 ## 🚀 Key Features
 
-✅ **Frontend Booking Calendar**
-- Displays available dates and time slots.
-- Past and fully booked days automatically disabled.
-- Shows remaining available slots (e.g., `15 [3 slots]`).
-- Booked or partially filled days are clearly indicated.
-
-✅ **Dynamic Slot Management**
-- Define slots per weekday (e.g., “Mon → 09:00,10:00,11:00”).
-- Automatically hide or disable past and booked slots.
-- Real-time AJAX calendar updates on month navigation.
-
-✅ **PMPro Integration**
-- Automatically creates PMPro order on successful booking.
-- Bookings linked to PMPro orders via meta fields.
-- Access control via PMPro membership levels.
-
-✅ **Admin Dashboard**
-- Full booking list with filters and search.
-- Quick view of booking status and linked PMPro order.
-- Cancel or modify bookings directly from admin.
-
-✅ **Custom Post Type**
-- `codo_booking` post type for all bookings.
-- Supports meta fields:
-  - `_codo_date`
-  - `_codo_time`
-  - `_codo_status`
-  - `_codo_user_id`
-  - `_codo_order_id`
-
-✅ **Smart Availability Logic**
-- Automatically greys out fully booked days in the calendar grid.
-- Days partially booked display available slot count.
-- Past days and cancelled bookings are excluded from availability.
+✅ **Standalone Booking System** – Manage bookings and appointments directly from your WordPress admin.  
+✅ **Custom Calendar UI** – Interactive weekly and monthly calendars with available slots and tooltips.  
+✅ **Recurring Booking Support** – Handle weekly recurring slots with future-date logic.  
+✅ **Booking Status Management** – Track pending, confirmed, and cancelled bookings.  
+✅ **Admin Dashboard Widgets** – Quick overview of calendar and booking stats with helpful links.  
+✅ **Extensible Architecture** – Built modularly, allowing clean integration of add-ons and third-party APIs.  
+✅ **Optimized and Secure** – Uses nonces, prepared SQL statements, and follows WordPress coding standards.  
 
 ---
 
-## ⚙️ How It Works
+## 🧱 Planned Extensions
 
-1. **Admin defines slot availability** in plugin settings:
-- Monday → 09:00, 10:00, 11:00
-- Tuesday → 10:00, 11:00, 12:00
+| Extension | Description | Status |
+|------------|--------------|--------|
+| **PMPro Integration** | Restrict or enable bookings based on membership level. | 🚧 Coming soon |
+| **WooCommerce Integration** | Convert bookings into WooCommerce products with checkout flow. | 🚧 Coming soon |
+| **Google Calendar Sync** | Allow users and admins to link and sync bookings to Google Calendar. | 🚧 Coming soon |
+| **Email Templates** | Customizable email notifications for bookings, cancellations, and reminders. | 🚧 Coming soon |
+---
 
-2. **User opens booking page**, selects a date, and chooses an available slot.
+## 🧩 Developer Hooks
 
-3. On confirmation:
-- A **CodoBooking post** is created.
-- A **PMPro order** is generated and linked.
-- Both are visible in their respective admin pages.
-
-4. Booked slots are **disabled automatically** and the day shows fewer available slots next time the calendar loads.
+CodoBookings provides several developer hooks to extend its behavior.
 
 ---
 
-## 🧩 Installation
+## 🛠 Installation
 
-1. Upload the plugin folder to:
-- /wp-content/plugins/codo-bookings/
-2. Activate via **Plugins → Installed Plugins**.
-3. Ensure **Paid Memberships Pro** is active.
-4. Visit **Bookings → Settings** to define time slots per weekday.
-
----
-
-## 🔧 Setup & Configuration
-
-CodoBookings provides two main ways to configure bookings: **direct slot-based booking** or **membership-level-based booking**.  
-
-### Step 1: Enable Booking for Membership Levels
-1. Go to **Memberships → Levels** (PMPro).
-2. Create a membership level or edit an existing one.
-3. Enable booking for that level by checking the **“Enable Booking”** option in the level settings.
-4. Define slot availability per weekday for that level in **Bookings → Settings**.
-
-### Step 2: Create a Booking Page
-1. Create a new page (e.g., “Book Your Slot”).
-2. Insert the shortcode:
+1. Download the plugin ZIP file or clone the repository.  
+2. Upload the folder to `/wp-content/plugins/codobookings/`.  
+3. Activate **CodoBookings** through the WordPress admin dashboard.  
+4. Access the **CodoBookings** menu to manage calendars, bookings and settings.  
 
 ---
 
-## 🧩 Shortcodes
+## 💡 Usage
 
-| Shortcode | Description |
-|------------|-------------|
-| `[codo_my_bookings]` | Shows a simple table of the current user's bookings. |
-| `[codo_booking_levels]` | Display PMPro membership levels with bookings enabled in a 3-column layout. |
-
----
-
-## 🧑‍💼 Admin Management
-
-### Bookings List
-Located under `Dashboard → Bookings`, columns include:
-- Date
-- Time
-- User
-- Status
-
-### Status Management
-- **Pending**, **Confirmed**, **Conmpleted**, **Cancelled**
-- Cancelled bookings are excluded from slot counts and availability.
+Once activated:
+- Manage calendars via **CodoBookings → Calendars** in admin.
+- Manage bookings via **CodoBookings → Bookings** in admin.  
+- Add or update slots using the booking calendar.  
+- View booking summaries in the WordPress **Dashboard Widget**.  
+- Extend functionality using future add-ons or custom hooks.
 
 ---
 
-## 🧠 Customization
-
-**Filters:**
-- `codo_booking_datetime_fields_html` – Modify date and time fields.
-
-**Actions:**
-- N/A
----
-
-## 🧾 Changelog
-
-### 1.0.0 (Initial Release)
-- Calendar-based booking interface.
-- Integrated PMPro order creation.
-- Weekday slot management.
-- Booked slot disabling and availability counting.
+**Hooks Overview:**
+- `codobookings_admin_overview_stats` – Extend the dashboard widget with custom stats.  
+- `codobookings_booking_created` – Triggered when a new booking is created.  
+- `codobookings_booking_status_changed` – Fires when a booking status is updated.
+- `codobookings_emails_sent` – Fires when a booking confirmation email is sent.
+- `codobookings_status_email_sent` – Fires when a booking status change email is sent.
 
 ---
 
-## 📜 License
+## 📘 Changelog
 
-Released under [GPL-2.0+ License](https://www.gnu.org/licenses/gpl-2.0.html)  
-© 2025 **Codoplex**
+### 1.1.0 – Major Upgrade from PMPro extension to a standalone plugin
+- Standalone booking plugin core
+- Admin dashboard widget for stats
+- Booking list and management UI
+- Recurring booking logic (weekly)
+- Modular architecture for future extensions
+
+### 1.0.0 - Initial Release
+- developed as a PMPro extension
+- Booking list and management UI
+
+
+---
+
+## 🧑‍💻 Developer Notes
+
+CodoBookings is structured for scalability:
+- Each functional area resides in its own file under `/includes/`.
+- Hooks and filters are available for extension developers.
+
+---
+
+## 🔗 Links
+
+- **Website:** [https://codoplex.com](https://codoplex.com)
+
+---
+
+## 🧾 License
+
+This plugin is licensed under the **GPLv2 or later** license.  
+You are free to use, modify, and redistribute it under the same license.
 
 ---
