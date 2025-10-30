@@ -81,7 +81,7 @@ function codobookings_calendar_shortcode( $atts ) {
 
         <?php if ( $settings['show_description'] === 'yes' ) : ?>
             <p class="codo-calendar-description" style="margin-bottom:1em; font-size:0.95em; color:#555;">
-                <?php echo esc_html( get_post_field('post_content', $calendar_id) ); ?>
+                <?php echo wp_kses_post( get_post_field('post_content', $calendar_id) ); ?>
             </p>
         <?php endif; ?>
 
