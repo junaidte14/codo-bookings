@@ -36,7 +36,7 @@ function codobookings_calendars_grid_shortcode( $atts ) {
 
         ob_start(); ?>
         <div class="codo-calendar-details">
-            <a href="<?php echo esc_url( $back_url ); ?>" class="codo-back-btn">← <?php _e( 'Back to All Calendars', 'codobookings' ); ?></a>
+            <a href="<?php echo esc_url( $back_url ); ?>" class="button codo-back-btn">← <?php _e( 'Back to All Calendars', 'codobookings' ); ?></a>
             <div class="codo-single-calendar">
                 <?php if ( has_post_thumbnail( $calendar_id ) ) : ?>
                     <div class="codo-calendar-featured">
@@ -51,21 +51,11 @@ function codobookings_calendars_grid_shortcode( $atts ) {
         .codo-back-btn {
             display: inline-block;
             margin-bottom: 20px;
-            text-decoration: none;
-            color: #0073aa;
             font-weight: 500;
-            background: #f3f6f9;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.25s ease;
-        }
-        .codo-back-btn:hover {
-            background: #0073aa;
-            color: #fff;
         }
         .codo-single-calendar {
             border: 1px solid #e3e3e3;
-            border-radius: 12px;
+            border-radius: 10px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.05);
             padding: 25px;
             background: #fff;
@@ -76,7 +66,7 @@ function codobookings_calendars_grid_shortcode( $atts ) {
             overflow: hidden;
         }
         .codo-calendar-featured img {
-            border-radius: 12px;
+            border-radius: 10px 10px 0 0;
             max-width: 100%;
             height: auto;
         }
@@ -136,8 +126,10 @@ function codobookings_calendars_grid_shortcode( $atts ) {
                 <?php endif; ?>
                 <div class="codo-calendar-content">
                     <h3 class="codo-calendar-title"><?php echo $title; ?></h3>
-                    <p class="codo-calendar-desc"><?php echo $desc; ?></p>
-                    <a href="<?php echo esc_url( $details_url ); ?>" class="codo-book-btn">
+                    <?php if ( ! empty( trim( $desc ) ) ) : ?>
+                        <p class="codo-calendar-desc"><?php echo $desc; ?></p>
+                    <?php endif; ?>
+                    <a href="<?php echo esc_url( $details_url ); ?>" class="button codo-book-btn">
                         <?php _e( 'Book Now', 'codobookings' ); ?>
                     </a>
                 </div>
@@ -186,33 +178,18 @@ function codobookings_calendars_grid_shortcode( $atts ) {
     .codo-calendar-thumb {
         width: 100%;
         height: auto;
-        border-radius: 10px;
+        border-radius: 10px 10px 0 0;
         object-fit: cover;
     }
     .codo-calendar-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #222;
         margin-bottom: 10px;
     }
     .codo-calendar-desc {
-        font-size: 0.95rem;
-        color: #555;
-        line-height: 1.5;
         margin-bottom: 20px;
     }
     .codo-book-btn {
         display: inline-block;
-        background: #0073aa;
-        color: #fff;
-        text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 6px;
         font-weight: 500;
-        transition: background 0.25s ease;
-    }
-    .codo-book-btn:hover {
-        background: #005f8d;
     }
     @media (max-width: 1024px) {
         .codo-calendar-item { flex: 1 1 calc(50% - 25px); }

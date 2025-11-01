@@ -35,7 +35,6 @@ function codobookings_calendar_shortcode( $atts ) {
     $settings = get_post_meta( $calendar_id, '_codo_sidebar_settings', true );
     $settings = wp_parse_args( $settings, array(
         'show_title'       => 'yes',
-        'show_description' => 'yes',
         'allow_guest'      => 'no',
     ));
 
@@ -74,14 +73,16 @@ function codobookings_calendar_shortcode( $atts ) {
     ?>
     <div class="codo-calendar-container">
         <?php if ( $settings['show_title'] === 'yes' ) : ?>
-            <h2 class="codo-calendar-title" style="margin-bottom:0.5em;">
+            <h2 class="codo-calendar-title">
                 <?php echo esc_html( get_the_title( $calendar_id ) ); ?>
             </h2>
         <?php endif; ?>
 
-        <?php if ( $settings['show_description'] === 'yes' ) : ?>
-            <p class="codo-calendar-description" style="margin-bottom:1em; font-size:0.95em; color:#555;">
-                <?php echo wp_kses_post( get_post_field('post_content', $calendar_id) ); ?>
+        <?php 
+        $desc = trim( get_post_field( 'post_content', $calendar_id ) );
+        if ( ! empty( $desc ) ) : ?>
+            <p class="codo-calendar-description">
+                <?php echo wp_kses_post( $desc ); ?>
             </p>
         <?php endif; ?>
 

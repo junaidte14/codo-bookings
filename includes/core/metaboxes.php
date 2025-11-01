@@ -300,7 +300,6 @@ function codobookings_sidebar_settings_cb( $post ) {
         get_post_meta( $post->ID, '_codo_sidebar_settings', true ),
         array(
             'show_title'        => 'yes',
-            'show_description'  => 'yes',
             'allow_guest'       => 'no',
         )
     );
@@ -315,14 +314,6 @@ function codobookings_sidebar_settings_cb( $post ) {
             <?php _e( 'Show Title', 'codobookings' ); ?>
         </label>
         <p class="description"><?php _e( 'Toggle to display the calendar title on the frontend.', 'codobookings' ); ?></p>
-    </p>
-
-    <p>
-        <label>
-            <input type="checkbox" name="codo_sidebar_settings[show_description]" value="yes" <?php checked( $settings['show_description'], 'yes' ); ?> />
-            <?php _e( 'Show Description', 'codobookings' ); ?>
-        </label>
-        <p class="description"><?php _e( 'Toggle to display the calendar description on the frontend.', 'codobookings' ); ?></p>
     </p>
 
     <p>
@@ -357,7 +348,6 @@ function codobookings_save_sidebar_settings( $post_id, $post ) {
     // Sanitize each known setting
     $sanitized = array(
         'show_title'       => isset( $settings['show_title'] ) && $settings['show_title'] === 'yes' ? 'yes' : 'no',
-        'show_description' => isset( $settings['show_description'] ) && $settings['show_description'] === 'yes' ? 'yes' : 'no',
         'allow_guest'      => isset( $settings['allow_guest'] ) && $settings['allow_guest'] === 'yes' ? 'yes' : 'no',
     );
 
