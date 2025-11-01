@@ -36,13 +36,17 @@ require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/admin/dashboard.php';
 // Shortcodes
 require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/shortcodes/single-calendar.php';
 require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/shortcodes/calendars-grid.php';
+require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/core/page-with-shortcode.php';
 
 // Emails
 require_once CODOBOOKINGS_PLUGIN_DIR . 'includes/emails/basic-emails.php';
 
 register_activation_hook( __FILE__, 'codobookings_activate' );
 function codobookings_activate() {
+    // Register post types before creating pages
     codobookings_register_post_types();
+    // Create or ensure Calendar page exists
+    codobookings_create_calendar_page();
     do_action( 'codobookings_activate' );
     flush_rewrite_rules();
 }

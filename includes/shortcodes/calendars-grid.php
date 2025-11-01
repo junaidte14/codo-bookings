@@ -18,64 +18,6 @@ function codobookings_calendars_grid_shortcode( $atts ) {
 
     $columns = max( 1, intval( $atts['columns'] ) );
 
-    // If a specific calendar is being viewed
-    if ( isset( $_GET['calendar_id'] ) && is_numeric( $_GET['calendar_id'] ) ) {
-        $calendar_id = intval( $_GET['calendar_id'] );
-        $calendar    = get_post( $calendar_id );
-
-        if ( ! $calendar || $calendar->post_type !== $atts['post_type'] ) {
-            return '<p>' . __( 'Invalid calendar selected.', 'codobookings' ) . '</p>';
-        }
-
-        // Determine Back URL
-        if ( $atts['details_page'] === 'current' ) {
-            $back_url = remove_query_arg( 'calendar_id' );
-        } else {
-            $back_url = esc_url( $atts['details_page'] );
-        }
-
-        ob_start(); ?>
-        <div class="codo-calendar-details">
-            <a href="<?php echo esc_url( $back_url ); ?>" class="button codo-back-btn">← <?php _e( 'Back to All Calendars', 'codobookings' ); ?></a>
-            <div class="codo-single-calendar">
-                <?php if ( has_post_thumbnail( $calendar_id ) ) : ?>
-                    <div class="codo-calendar-featured">
-                        <?php echo get_the_post_thumbnail( $calendar_id, 'large', array( 'class' => 'codo-calendar-img' ) ); ?>
-                    </div>
-                <?php endif; ?>
-                <?php echo do_shortcode( '[codo_calendar id="' . esc_attr( $calendar_id ) . '"]' ); ?>
-            </div>
-        </div>
-
-        <style>
-        .codo-back-btn {
-            display: inline-block;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        .codo-single-calendar {
-            border: 1px solid #e3e3e3;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            padding: 25px;
-            background: #fff;
-        }
-        .codo-calendar-featured {
-            text-align: center;
-            margin: -25px -25px 0 -25px; /* cancel out card padding */
-            overflow: hidden;
-        }
-        .codo-calendar-featured img {
-            border-radius: 10px 10px 0 0;
-            max-width: 100%;
-            height: auto;
-        }
-        </style>
-        <?php
-        return ob_get_clean();
-    }
-
-    // Otherwise: show grid view
     // Build query args for grid view
     $query_args = array(
         'post_type'      => $atts['post_type'],
@@ -109,12 +51,26 @@ function codobookings_calendars_grid_shortcode( $atts ) {
             $desc  = esc_html( wp_trim_words( $calendar->post_content, 25 ) );
             $img   = has_post_thumbnail( $calendar->ID ) ? get_the_post_thumbnail( $calendar->ID, 'medium', array( 'class' => 'codo-calendar-thumb' ) ) : '';
 
-            // Determine details URL
-            if ( $atts['details_page'] === 'current' ) {
-                $details_url = add_query_arg( 'calendar_id', $calendar->ID, get_permalink() );
+            // Determine details page ID (stored when plugin was activated)
+            $calendar_page_id = get_option( 'codobookings_calendar_page_id' );
+
+            // Validate that the page still exists
+            if ( $calendar_page_id && get_post_status( $calendar_page_id ) === 'publish' ) {
+                // Use the stored page permalink
+                $calendar_page_url = get_permalink( $calendar_page_id );
             } else {
-                $details_url = add_query_arg( 'calendar_id', $calendar->ID, esc_url( $atts['details_page'] ) );
+                // Fallback: if the page was deleted, create it again
+                $calendar_page_url = codobookings_create_calendar_page();
             }
+
+            // Capture current page URL to use as "back" link
+            $current_page_url = get_permalink(); //
+            $current_page_id = get_queried_object_id(); 
+            // Build details URL with both calendar_id and back params
+            $details_url = add_query_arg( array(
+                'calendar_id' => $calendar->ID,
+                'back'        => $current_page_id,
+            ), esc_url( $calendar_page_url ) );
             ?>
             <div class="codo-calendar-item">
                 <?php if ( $img ) : ?>
@@ -153,7 +109,7 @@ function codobookings_calendars_grid_shortcode( $atts ) {
         border-radius: 14px;
         border: 1px solid #e3e3e3;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        padding: 25px;
+        padding: 10px;
         text-align: center;
         transition: all 0.25s ease;
         display: flex;
@@ -172,7 +128,7 @@ function codobookings_calendars_grid_shortcode( $atts ) {
         box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
     .codo-calendar-thumb-wrap {
-        margin: -25px -25px 0 -25px; /* cancel out card padding */
+        margin: -10px -10px 0 -10px; /* cancel out card padding */
         overflow: hidden;
     }
     .codo-calendar-thumb {

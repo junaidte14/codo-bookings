@@ -10,9 +10,21 @@ function codobookings_calendar_shortcode( $atts ) {
         'id' => 0,
     ), $atts, 'codo_calendar');
 
-    $calendar_id = intval($atts['id']);
-    if (!$calendar_id) {
+    // If no ID is given in the shortcode, check for ?calendar_id= in the URL
+    $calendar_id = intval( $atts['id'] );
+    if ( ! $calendar_id && isset( $_GET['calendar_id'] ) ) {
+        $calendar_id = intval( $_GET['calendar_id'] );
+    }
+
+    // Validate that a calendar ID exists and is valid
+    if ( ! $calendar_id ) {
         return '<div class="codo-calendar-error">Invalid calendar ID.</div>';
+    }
+
+    // Optionally, confirm that the post exists and is of the correct type
+    $calendar_post = get_post( $calendar_id );
+    if ( ! $calendar_post || $calendar_post->post_type !== 'codo_calendar' ) {
+        return '<div class="codo-calendar-error">Calendar not found or invalid type.</div>';
     }
 
     // Enqueue frontend assets
@@ -68,28 +80,43 @@ function codobookings_calendar_shortcode( $atts ) {
         ])
     ) );
 
-    ob_start();
     $unique_id = 'codo-calendar-' . $calendar_id . '-' . uniqid();
+    // Determine Back URL
+    if ( ! empty( $_GET['back'] ) ) {
+        $back_id = intval( $_GET['back'] ); // sanitize the value
+        $back_url = get_permalink( $back_id );
+    }
+    ob_start();
     ?>
     <div class="codo-calendar-container">
-        <?php if ( $settings['show_title'] === 'yes' ) : ?>
-            <h2 class="codo-calendar-title">
-                <?php echo esc_html( get_the_title( $calendar_id ) ); ?>
-            </h2>
+        <?php if ( !empty($back_url) ) : ?>
+            <a href="<?php echo esc_url( $back_url ); ?>" class="button codo-back-btn">← <?php _e( 'Back to All Calendars', 'codobookings' ); ?></a>
         <?php endif; ?>
+        <div class="codo-single-calendar">
+            <?php if ( has_post_thumbnail( $calendar_id ) ) : ?>
+                <div class="codo-calendar-featured">
+                    <?php echo get_the_post_thumbnail( $calendar_id, 'large', array( 'class' => 'codo-calendar-img' ) ); ?>
+                </div>
+            <?php endif; ?>
+            <?php if ( $settings['show_title'] === 'yes' ) : ?>
+                <h2 class="codo-calendar-title">
+                    <?php echo esc_html( get_the_title( $calendar_id ) ); ?>
+                </h2>
+            <?php endif; ?>
 
-        <?php 
-        $desc = trim( get_post_field( 'post_content', $calendar_id ) );
-        if ( ! empty( $desc ) ) : ?>
-            <p class="codo-calendar-description">
-                <?php echo wp_kses_post( $desc ); ?>
-            </p>
-        <?php endif; ?>
+            <?php 
+            $desc = trim( get_post_field( 'post_content', $calendar_id ) );
+            if ( ! empty( $desc ) ) : ?>
+                <p class="codo-calendar-description">
+                    <?php echo wp_kses_post( $desc ); ?>
+                </p>
+            <?php endif; ?>
 
-        <div id="<?php echo esc_attr($unique_id); ?>" 
-             class="codo-calendar-wrapper" 
-             data-calendar-id="<?php echo esc_attr($calendar_id); ?>">
-            <div class="codo-calendar-loading"><?php echo esc_html__('Loading booking calendar...', 'codobookings'); ?></div>
+            <div id="<?php echo esc_attr($unique_id); ?>" 
+                class="codo-calendar-wrapper" 
+                data-calendar-id="<?php echo esc_attr($calendar_id); ?>">
+                <div class="codo-calendar-loading"><?php echo esc_html__('Loading booking calendar...', 'codobookings'); ?></div>
+            </div>
         </div>
     </div>
     <?php
