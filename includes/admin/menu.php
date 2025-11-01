@@ -23,6 +23,15 @@ function codobookings_admin_menu() {
         0
     );
 
+    // 👇 Add "Calendar Categories" submenu (taxonomy link)
+    add_submenu_page(
+        'codobookings_dashboard',
+        __( 'Categories', 'codobookings' ),
+        __( 'Categories', 'codobookings' ),
+        'manage_options',
+        'edit-tags.php?taxonomy=calendar_category&post_type=codo_calendar',
+    );
+
     add_submenu_page(
         'codobookings_dashboard',
         __( 'Settings', 'codobookings' ),
@@ -33,3 +42,19 @@ function codobookings_admin_menu() {
         10
     );
 }
+
+/**
+ * ✅ Force highlight for taxonomy page under custom menu
+ */
+add_action( 'admin_head', function() {
+    global $parent_file, $submenu_file, $current_screen;
+
+    if (
+        isset( $current_screen->taxonomy ) &&
+        $current_screen->taxonomy === 'calendar_category' &&
+        $current_screen->post_type === 'codo_calendar'
+    ) {
+        $parent_file  = 'codobookings_dashboard';
+        $submenu_file = 'edit-tags.php?taxonomy=calendar_category&post_type=codo_calendar';
+    }
+});

@@ -2,20 +2,38 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function codobookings_register_post_types() {
-    $cap = apply_filters( 'codobookings_capability', 'manage_options' );
-
     // Calendars
     $labels = array(
-        'name' => __( 'Calendars', 'codobookings' ),
-        'singular_name' => __( 'Calendar', 'codobookings' ),
-        'menu_name' => __( 'Calendars', 'codobookings' ),
+        'name'                  => __( 'Calendars', 'codobookings' ),
+        'singular_name'         => __( 'Calendar', 'codobookings' ),
+        'menu_name'             => __( 'Calendars', 'codobookings' ),
+        'name_admin_bar'        => __( 'Calendar', 'codobookings' ),
+        'add_new'               => __( 'Add New', 'codobookings' ),
+        'add_new_item'          => __( 'Add New Calendar', 'codobookings' ),
+        'edit_item'             => __( 'Edit Calendar', 'codobookings' ),
+        'new_item'              => __( 'New Calendar', 'codobookings' ),
+        'view_item'             => __( 'View Calendar', 'codobookings' ),
+        'view_items'            => __( 'View Calendars', 'codobookings' ),
+        'search_items'          => __( 'Search Calendars', 'codobookings' ),
+        'not_found'             => __( 'No calendars found.', 'codobookings' ),
+        'not_found_in_trash'    => __( 'No calendars found in Trash.', 'codobookings' ),
+        'all_items'             => __( 'Calendars', 'codobookings' ),
+        'archives'              => __( 'Calendar Archives', 'codobookings' ),
+        'attributes'            => __( 'Calendar Attributes', 'codobookings' ),
+        'insert_into_item'      => __( 'Insert into calendar', 'codobookings' ),
+        'uploaded_to_this_item' => __( 'Uploaded to this calendar', 'codobookings' ),
+        'filter_items_list'     => __( 'Filter calendars list', 'codobookings' ),
+        'items_list_navigation' => __( 'Calendars list navigation', 'codobookings' ),
+        'items_list'            => __( 'Calendars list', 'codobookings' ),
     );
+
     $args = array(
         'labels' => $labels,
         'public' => false,
         'show_ui' => true,
         'show_in_menu' => 'codobookings_dashboard',
-        'supports' => array( 'title', 'editor' ),
+        'menu_name'         => __( 'Calendars', 'codobookings' ),
+        'supports' => array( 'title', 'editor', 'thumbnail' ),
         'capability_type' => 'post',
         'map_meta_cap'    => true,
         'has_archive' => false,
@@ -23,6 +41,30 @@ function codobookings_register_post_types() {
     $args = apply_filters( 'codobookings_calendar_post_type_args', $args );
     register_post_type( 'codo_calendar', $args );
 
+    // ✅ Custom Taxonomy for Calendar Category
+    $taxonomy_labels = array(
+        'name'              => __( 'Calendar Categories', 'codobookings' ),
+        'singular_name'     => __( 'Calendar Category', 'codobookings' ),
+        'search_items'      => __( 'Search Calendar Categories', 'codobookings' ),
+        'all_items'         => __( 'All Calendar Categories', 'codobookings' ),
+        'edit_item'         => __( 'Edit Calendar Category', 'codobookings' ),
+        'update_item'       => __( 'Update Calendar Category', 'codobookings' ),
+        'add_new_item'      => __( 'Add New Calendar Category', 'codobookings' ),
+        'new_item_name'     => __( 'New Calendar Category Name', 'codobookings' ),
+        'menu_name'         => __( 'Calendar Categories', 'codobookings' ),
+    );
+
+    $taxonomy_args = array(
+        'hierarchical'      => true,
+        'labels'            => $taxonomy_labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'show_in_menu' => true,
+        'query_var'         => true,
+        'rewrite'           => false, // set to false if this is admin-only
+    );
+
+    register_taxonomy( 'calendar_category', array( 'codo_calendar' ), $taxonomy_args );
 
     // Bookings
     $labels2 = array(
