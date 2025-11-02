@@ -68,9 +68,30 @@ function codobookings_register_post_types() {
 
     // Bookings
     $labels2 = array(
-        'name' => __( 'Bookings', 'codobookings' ),
-        'singular_name' => __( 'Booking', 'codobookings' ),
+        'name'                  => _x( 'Bookings', 'Post Type General Name', 'codobookings' ),
+        'singular_name'         => _x( 'Booking', 'Post Type Singular Name', 'codobookings' ),
+        'menu_name'             => __( 'Bookings', 'codobookings' ),
+        'name_admin_bar'        => __( 'Booking', 'codobookings' ),
+        'add_new'               => __( 'Add New', 'codobookings' ),
+        'add_new_item'          => __( 'Add New Booking', 'codobookings' ),
+        'edit_item'             => __( 'Edit Booking', 'codobookings' ),
+        'new_item'              => __( 'New Booking', 'codobookings' ),
+        'view_item'             => __( 'View Booking', 'codobookings' ),
+        'view_items'            => __( 'View Bookings', 'codobookings' ),
+        'search_items'          => __( 'Search Bookings', 'codobookings' ),
+        'not_found'             => __( 'No bookings found.', 'codobookings' ),
+        'not_found_in_trash'    => __( 'No bookings found in Trash.', 'codobookings' ),
+        'all_items'             => __( 'Bookings', 'codobookings' ),
+        'archives'              => __( 'Booking Archives', 'codobookings' ),
+        'attributes'            => __( 'Booking Attributes', 'codobookings' ),
+        'insert_into_item'      => __( 'Insert into booking', 'codobookings' ),
+        'uploaded_to_this_item' => __( 'Uploaded to this booking', 'codobookings' ),
+        'filter_items_list'     => __( 'Filter bookings list', 'codobookings' ),
+        'items_list_navigation' => __( 'Bookings list navigation', 'codobookings' ),
+        'items_list'            => __( 'Bookings list', 'codobookings' ),
+        'parent_item_colon'     => __( 'Parent Booking:', 'codobookings' ),
     );
+
     $args2 = array(
         'labels' => $labels2,
         'public' => false,

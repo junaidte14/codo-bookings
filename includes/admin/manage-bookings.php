@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_action( 'add_meta_boxes', function() {
     add_meta_box(
         'codo_booking_times',
-        __( 'Booking Times', 'codobookings' ),
+        __( 'Booking Details', 'codobookings' ),
         'codobookings_booking_times_meta_box',
         'codo_booking',
         'normal',

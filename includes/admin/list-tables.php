@@ -9,6 +9,7 @@ function codobookings_calendar_columns( $cols ) {
         'title'     => __( 'Calendar', 'codobookings' ),
         'shortcode' => __( 'Shortcode', 'codobookings' ),
         'recurrence'     => __( 'Type', 'codobookings' ),
+        'category'  => __( 'Category', 'codobookings' ),
         'date'      => $cols['date'],
     );
     return $cols;
@@ -27,7 +28,138 @@ function codobookings_calendar_columns_data( $column, $post_id ) {
             echo $recurrence;
         }
     }
+
+    if ( $column === 'category' ) {
+        $terms = get_the_terms( $post_id, 'calendar_category' );
+        if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+            $links = array();
+            foreach ( $terms as $term ) {
+                $url = esc_url( add_query_arg( array(
+                    'post_type' => 'codo_calendar',
+                    'calendar_category' => $term->slug,
+                ), 'edit.php' ) );
+                $links[] = '<a href="' . $url . '">' . esc_html( $term->name ) . '</a>';
+            }
+            echo implode( ', ', $links );
+        } else {
+            echo '<span style="color:#aaa;">' . __( '—', 'codobookings' ) . '</span>';
+        }
+    }
 }
+
+// --- Add "View" link in Calendar admin list ---
+add_filter( 'post_row_actions', 'codobookings_add_view_calendar_link', 10, 2 );
+function codobookings_add_view_calendar_link( $actions, $post ) {
+    if ( $post->post_type === 'codo_calendar' ) {
+        $calendar_page = get_permalink( get_page_by_path( 'calendar' ) );
+        if ( $calendar_page ) {
+            $view_url = add_query_arg( 'calendar_id', $post->ID, $calendar_page );
+            $actions['view_calendar'] = '<a href="' . esc_url( $view_url ) . '" target="_blank">' . __( 'View', 'codobookings' ) . '</a>';
+        }
+    }
+    return $actions;
+}
+
+// --- Show "View Calendar" link after saving/updating ---
+add_action( 'post_updated_messages', 'codobookings_calendar_updated_messages' );
+function codobookings_calendar_updated_messages( $messages ) {
+    global $post;
+    
+    if ( isset( $post->post_type ) && $post->post_type === 'codo_calendar' ) {
+        $calendar_page = get_permalink( get_page_by_path( 'calendar' ) );
+
+        if ( $calendar_page ) {
+            $view_url = add_query_arg( 'calendar_id', $post->ID, $calendar_page );
+            $view_link = ' <a href="' . esc_url( $view_url ) . '" target="_blank">' . __( 'View Calendar', 'codobookings' ) . '</a>';
+
+            $messages['codo_calendar'][1] = __( 'Calendar updated.', 'codobookings' ) . $view_link;
+            $messages['codo_calendar'][6] = __( 'Calendar published.', 'codobookings' ) . $view_link;
+            $messages['codo_calendar'][7] = __( 'Calendar saved.', 'codobookings' ) . $view_link;
+            $messages['codo_calendar'][10] = __( 'Calendar draft updated.', 'codobookings' ) . $view_link;
+        }
+    }
+
+    return $messages;
+}
+
+// --- Add dropdown filter above Calendar list ---
+add_action( 'restrict_manage_posts', 'codobookings_calendar_filter_dropdown' );
+function codobookings_calendar_filter_dropdown() {
+    global $typenow;
+    if ( $typenow !== 'codo_calendar' ) {
+        return;
+    }
+
+    $selected = isset( $_GET['recurrence_filter'] ) ? $_GET['recurrence_filter'] : '';
+    ?>
+    <select name="recurrence_filter">
+        <option value=""><?php _e( 'All Types', 'codobookings' ); ?></option>
+        <option value="none" <?php selected( $selected, 'none' ); ?>><?php _e( 'One-time', 'codobookings' ); ?></option>
+        <option value="weekly" <?php selected( $selected, 'weekly' ); ?>><?php _e( 'Weekly', 'codobookings' ); ?></option>
+    </select>
+    <?php
+}
+
+// --- Filter Calendar list query by recurrence type ---
+add_action( 'pre_get_posts', 'codobookings_filter_calendars_by_type' );
+function codobookings_filter_calendars_by_type( $query ) {
+    global $pagenow, $typenow;
+
+    if ( $pagenow !== 'edit.php' || $typenow !== 'codo_calendar' || ! $query->is_main_query() ) {
+        return;
+    }
+
+    if ( isset( $_GET['recurrence_filter'] ) && $_GET['recurrence_filter'] !== '' ) {
+        $query->set( 'meta_query', array(
+            array(
+                'key'     => '_codo_recurrence',
+                'value'   => sanitize_text_field( $_GET['recurrence_filter'] ),
+                'compare' => '=',
+            ),
+        ) );
+    }
+}
+
+// Add "Filter by Category" dropdown in the admin list view for Calendars
+add_action( 'restrict_manage_posts', function( $post_type ) {
+    if ( $post_type !== 'codo_calendar' ) {
+        return;
+    }
+
+    $taxonomy = 'calendar_category';
+    $selected = isset( $_GET[$taxonomy] ) ? $_GET[$taxonomy] : '';
+    $info_taxonomy = get_taxonomy( $taxonomy );
+
+    wp_dropdown_categories( array(
+        'show_option_all' => __( 'All Categories', 'codobookings' ),
+        'taxonomy'        => $taxonomy,
+        'name'            => $taxonomy,
+        'orderby'         => 'name',
+        'selected'        => $selected,
+        'hierarchical'    => true,
+        'depth'           => 0,
+        'show_count'      => true,
+        'hide_empty'      => false,
+    ) );
+});
+
+add_filter( 'parse_query', function( $query ) {
+    global $pagenow;
+
+    $taxonomy = 'calendar_category';
+    $q_vars   = &$query->query_vars;
+
+    if ( $pagenow === 'edit.php'
+        && isset( $q_vars['post_type'] )
+        && $q_vars['post_type'] === 'codo_calendar'
+        && isset( $q_vars[$taxonomy] )
+        && is_numeric( $q_vars[$taxonomy] )
+        && $q_vars[$taxonomy] != 0
+    ) {
+        $term = get_term_by( 'id', $q_vars[$taxonomy], $taxonomy );
+        $q_vars[$taxonomy] = $term->slug;
+    }
+});
 
 // --- Bookings Columns ---
 add_filter( 'manage_codo_booking_posts_columns', 'codobookings_booking_columns' );
@@ -46,7 +178,14 @@ add_action( 'manage_codo_booking_posts_custom_column', 'codobookings_booking_col
 function codobookings_booking_columns_data( $column, $post_id ) {
     // Calendar column
     if ( $column === 'calendar' ) {
-        echo get_the_title( get_post_meta( $post_id, '_codo_calendar_id', true ) );
+        $calendar_id = get_post_meta( $post_id, '_codo_calendar_id', true );
+        if ( $calendar_id ) {
+            $calendar_title = get_the_title( $calendar_id );
+            $edit_link = get_edit_post_link( $calendar_id );
+            echo '<a href="' . esc_url( $edit_link ) . '">' . esc_html( $calendar_title ) . '</a>';
+        } else {
+            echo '-';
+        }
         return;
     }
 
@@ -123,5 +262,68 @@ function codobookings_booking_columns_data( $column, $post_id ) {
             if ( $end_local ) echo ' - ' . esc_html($end_local->format('H:i'));
             echo '</div>';
         }
+    }
+}
+
+// --- Bookings Filters ---
+add_action( 'restrict_manage_posts', 'codobookings_add_booking_filters' );
+function codobookings_add_booking_filters() {
+    global $typenow;
+    if ( $typenow !== 'codo_booking' ) return;
+
+    // Get unique calendar IDs from existing bookings
+    $calendar_ids = get_posts( array(
+        'post_type'      => 'codo_booking',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ) );
+    $used_calendar_ids = array_unique( array_filter( array_map( function( $id ) {
+        return get_post_meta( $id, '_codo_calendar_id', true );
+    }, $calendar_ids ) ) );
+
+    // Calendar Filter
+    echo '<select name="codo_calendar_filter">';
+    echo '<option value="">' . esc_html__( 'All Calendars', 'codobookings' ) . '</option>';
+    foreach ( $used_calendar_ids as $calendar_id ) {
+        $selected = ( isset( $_GET['codo_calendar_filter'] ) && $_GET['codo_calendar_filter'] == $calendar_id ) ? 'selected' : '';
+        echo '<option value="' . esc_attr( $calendar_id ) . '" ' . $selected . '>' . esc_html( get_the_title( $calendar_id ) ) . '</option>';
+    }
+    echo '</select>';
+
+    // Status Filter
+    $statuses = array( 'pending', 'confirmed', 'cancelled', 'completed' );
+    echo '<select name="codo_status_filter">';
+    echo '<option value="">' . esc_html__( 'All Statuses', 'codobookings' ) . '</option>';
+    foreach ( $statuses as $status ) {
+        $selected = ( isset( $_GET['codo_status_filter'] ) && $_GET['codo_status_filter'] === $status ) ? 'selected' : '';
+        echo '<option value="' . esc_attr( $status ) . '" ' . $selected . '>' . esc_html( ucfirst( $status ) ) . '</option>';
+    }
+    echo '</select>';
+}
+
+// --- Filter query ---
+add_action( 'pre_get_posts', 'codobookings_filter_bookings_query' );
+function codobookings_filter_bookings_query( $query ) {
+    global $pagenow;
+    if ( ! is_admin() || $pagenow !== 'edit.php' || $query->get('post_type') !== 'codo_booking' ) return;
+
+    // Filter by Calendar
+    if ( ! empty( $_GET['codo_calendar_filter'] ) ) {
+        $query->set( 'meta_query', array(
+            array(
+                'key'   => '_codo_calendar_id',
+                'value' => sanitize_text_field( $_GET['codo_calendar_filter'] ),
+            )
+        ) );
+    }
+
+    // Filter by Status
+    if ( ! empty( $_GET['codo_status_filter'] ) ) {
+        $meta_query = (array) $query->get( 'meta_query' );
+        $meta_query[] = array(
+            'key'   => '_codo_status',
+            'value' => sanitize_text_field( $_GET['codo_status_filter'] ),
+        );
+        $query->set( 'meta_query', $meta_query );
     }
 }
