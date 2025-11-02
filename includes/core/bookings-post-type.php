@@ -50,6 +50,9 @@ function codobookings_create_booking( $data ) {
 add_action( 'save_post', 'codobookings_handle_booking_status_change', 20, 2 );
 function codobookings_handle_booking_status_change( $post_id, $post ) {
     if ( $post->post_type !== 'codo_booking' ) return;
-    $status = get_post_meta( $post_id, '_codo_status', true );
-    do_action( 'codobookings_booking_status_changed', $post_id, $status );
+    // Wait until all meta fields are updated
+    add_action( 'shutdown', function() use ( $post_id ) {
+        $status = get_post_meta( $post_id, '_codo_status', true );
+        do_action( 'codobookings_booking_status_changed', $post_id, $status );
+    });
 }

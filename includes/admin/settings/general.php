@@ -115,16 +115,38 @@ function codobookings_render_general_settings() {
         <tr>
             <th><?php _e( 'Default meeting app', 'codobookings' ); ?></th>
             <td>
-                <select name="codobookings_default_meeting_app">
-                    <option value="none" <?php selected( get_option( 'codobookings_default_meeting_app' ), 'none' ); ?>>
-                        None
-                    </option>
-                    <option value="google_calendar" <?php selected( get_option( 'codobookings_default_meeting_app' ), 'google_calendar' ); ?>>
-                        Google Meet (via Calendar)
-                    </option>
+                <?php
+                // Default apps
+                $meeting_apps = array(
+                    'none' => __( 'None', 'codobookings' ),
+                );
+
+                /**
+                 * Filter: codobookings_meeting_apps
+                 *
+                 * Allow other extensions to register meeting app integrations.
+                 *
+                 * Example:
+                 * add_filter( 'codobookings_meeting_apps', function( $apps ) {
+                 *     $apps['google_calendar'] = __( 'Google Meet (via Calendar)', 'codobookings' );
+                 *     $apps['zoom'] = __( 'Zoom Meetings', 'codobookings' );
+                 *     return $apps;
+                 * });
+                 */
+                $meeting_apps = apply_filters( 'codobookings_meeting_apps', $meeting_apps );
+
+                $current_app = get_option( 'codobookings_default_meeting_app', 'none' );
+                ?>
+                <select name="codobookings_default_meeting_app" id="codobookings_default_meeting_app">
+                    <?php foreach ( $meeting_apps as $key => $label ) : ?>
+                        <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $current_app, $key ); ?>>
+                            <?php echo esc_html( $label ); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </td>
         </tr>
+
         <tr>
             <th><?php _e( 'Notify before (minutes)', 'codobookings' ); ?></th>
             <td>

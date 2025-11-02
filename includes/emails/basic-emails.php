@@ -13,8 +13,19 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_action( 'codobookings_booking_created', 'codobookings_send_new_booking_emails', 10, 2 );
 function codobookings_send_new_booking_emails( $booking_id, $data ) {
     // Allow future extension to modify or skip
-    $send_admin = apply_filters( 'codobookings_send_admin_email_enabled', get_option( 'codobookings_send_admin_email', 'yes' ), $booking_id, $data );
-    $send_user  = apply_filters( 'codobookings_send_user_email_enabled',  get_option( 'codobookings_send_user_email', 'yes' ),  $booking_id, $data );
+    $send_admin = apply_filters(
+        'codobookings_send_admin_email_enabled',
+        get_option( 'codobookings_send_admin_email', 'yes' ) ?: 'yes',
+        $booking_id,
+        $data
+    );
+
+    $send_user = apply_filters(
+        'codobookings_send_user_email_enabled',
+        get_option( 'codobookings_send_user_email', 'yes' ) ?: 'yes',
+        $booking_id,
+        $data
+    );
 
     $calendar_id    = $data['calendar_id'];
     $attendee_email = sanitize_email( $data['email'] );
@@ -76,6 +87,10 @@ function codobookings_send_new_booking_emails( $booking_id, $data ) {
  */
 add_action( 'codobookings_booking_status_changed', 'codobookings_send_status_change_email', 10, 2 );
 function codobookings_send_status_change_email( $booking_id, $status ) {
+    // ✅ Skip if status is "pending"
+    if ( strtolower( trim( $status ) ) === 'pending' ) {
+        return;
+    }
     $send_user  = apply_filters( 'codobookings_send_user_email_enabled',  get_option( 'codobookings_send_user_email', 'yes' ), $booking_id );
     $send_admin = apply_filters( 'codobookings_send_admin_email_enabled', get_option( 'codobookings_send_admin_email', 'yes' ), $booking_id );
 
