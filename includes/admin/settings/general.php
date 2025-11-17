@@ -12,17 +12,6 @@ function codobookings_register_general_settings() {
         'default'           => 'none',
     ]);
 
-    /**
-     * 🔧 Allow other modules to register their own settings.
-     * Example usage:
-     * add_action( 'codobookings_register_settings', function() {
-     *     register_setting( 'codobookings_options', 'my_custom_setting', [
-     *         'type' => 'string',
-     *         'sanitize_callback' => 'sanitize_text_field',
-     *         'default' => '',
-     *     ]);
-     * });
-     */
     do_action( 'codobookings_register_settings' );
 }
 
@@ -47,10 +36,10 @@ function codobookings_settings_page() {
     if ( ! current_user_can( 'manage_options' ) ) return;
 
     $tabs       = codobookings_get_settings_tabs();
-    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
     if ( ! isset( $tabs[ $active_tab ] ) ) $active_tab = 'general';
 
-    if ( isset( $_GET['settings-updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    if ( isset( $_GET['settings-updated'] ) ) {
         add_settings_error( 'codobookings_messages', 'codobookings_message',
             __( 'Settings saved successfully.', 'codobookings' ), 'updated' );
     }
@@ -82,20 +71,31 @@ function codobookings_settings_page() {
             ?>
         </form>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.querySelector('form');
-            if (form) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'tab';
-                input.value = '<?php echo esc_js( $active_tab ); ?>';
-                form.appendChild(input);
-            }
-        });
-    </script>
     <?php
 }
+
+/**
+ * Enqueue admin inline JS for hidden tab input
+ */
+function codobookings_admin_inline_js( $hook ) {
+    if ( $hook !== 'settings_page_codobookings_settings' ) return;
+
+    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+
+    wp_add_inline_script( 'jquery-core', "
+        jQuery(document).ready(function($){
+            var form = $('form');
+            if(form.length){
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'tab',
+                    value: '" . esc_js( $active_tab ) . "'
+                }).appendTo(form);
+            }
+        });
+    ");
+}
+add_action( 'admin_enqueue_scripts', 'codobookings_admin_inline_js' );
 
 /**
  * Render General Settings Tab
@@ -104,9 +104,6 @@ function codobookings_render_general_settings() {
     ?>
     <table class="form-table">
         <?php
-        /**
-         * Default "General" settings fields
-         */
         $fields = [
             'codobookings_default_meeting_app' => function() {
                 $meeting_apps = apply_filters( 'codobookings_meeting_apps', [
@@ -129,27 +126,10 @@ function codobookings_render_general_settings() {
                 </tr>
                 <?php
             },
-
         ];
 
-        /**
-         * Allow extensions to register new fields.
-         * Example:
-         * add_filter( 'codobookings_general_settings_fields', function( $fields ) {
-         *     $fields['my_custom_option'] = function() {
-         *         ?>
-         *         <tr>
-         *             <th><?php esc_html_e( 'My Custom Option', 'myplugin' ); ?></th>
-         *             <td><input type="text" name="my_custom_option" value="<?php echo esc_attr( get_option('my_custom_option') ); ?>"></td>
-         *         </tr>
-         *         <?php
-         *     };
-         *     return $fields;
-         * });
-         */
         $fields = apply_filters( 'codobookings_general_settings_fields', $fields );
 
-        // Render each registered field
         foreach ( $fields as $callback ) {
             if ( is_callable( $callback ) ) call_user_func( $callback );
         }

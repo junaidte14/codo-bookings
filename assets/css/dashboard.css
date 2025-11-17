@@ -1,0 +1,42 @@
+.codobookings-dashboard-grid {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+.codobookings-dashboard-main { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+.codobookings-dashboard-sidebar { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.codobookings-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    max-width: 100%;
+}
+.codobookings-quick-links li {
+    margin: 6px 0;
+}
+.codobookings-quick-links a {
+    text-decoration: none;
+    color: #0073aa;
+    display: inline-flex;
+    align-items: center;
+}
+.codobookings-quick-links a:hover {
+    color: #2271b1;
+}
+.codobookings-quick-links .dashicons {
+    margin-right: 8px;
+    color: #555;
+}
+.codobookings-addons-list li {
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+}
+.codobookings-addons-list li:last-child {
+    border-bottom: none;
+}
+@media (max-width: 960px) {
+    .codobookings-dashboard-grid { flex-direction: column; }
+}
