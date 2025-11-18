@@ -164,7 +164,7 @@ function codobookings_save_calendar_meta( $post_id, $post ) {
         }
     }
 
-    update_post_meta( $post_id, '_codo_weekly_slots', $slots );
+    update_post_meta( $post_id, '_codo_weekly_slots', $$slots_sanitized );
     update_post_meta( $post_id, '_codo_recurrence', sanitize_text_field( $_POST['codo_recurrence'] ?? 'none' ) );
 
     if ( isset( $_POST['codo_confirmation_message'] ) ) {

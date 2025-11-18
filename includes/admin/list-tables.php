@@ -30,7 +30,7 @@ function codobookings_calendar_columns_data( $column, $post_id ) {
     }
 
     if ( $column === 'category' ) {
-        $terms = get_the_terms( $post_id, 'calendar_category' );
+        $terms = get_the_terms( $post_id, 'codo_calendar_category' );
         if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
             $links = array();
 
@@ -38,7 +38,7 @@ function codobookings_calendar_columns_data( $column, $post_id ) {
                 $url = esc_url( add_query_arg(
                     array(
                         'post_type'          => 'codo_calendar',
-                        'calendar_category'  => $term->slug,
+                        'codo_calendar_category'  => $term->slug,
                     ),
                     'edit.php'
                 ) );
@@ -134,7 +134,7 @@ add_action( 'restrict_manage_posts', function( $post_type ) {
         return;
     }
 
-    $taxonomy = 'calendar_category';
+    $taxonomy = 'codo_calendar_category';
     $selected = isset( $_GET[$taxonomy] ) ? absint($_GET[$taxonomy]) : 0;
     $info_taxonomy = get_taxonomy( $taxonomy );
 
@@ -154,7 +154,7 @@ add_action( 'restrict_manage_posts', function( $post_type ) {
 add_filter( 'parse_query', function( $query ) {
     global $pagenow;
 
-    $taxonomy = 'calendar_category';
+    $taxonomy = 'codo_calendar_category';
     $q_vars   = &$query->query_vars;
 
     if ( $pagenow === 'edit.php'

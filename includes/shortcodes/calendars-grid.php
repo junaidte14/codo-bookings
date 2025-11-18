@@ -43,7 +43,7 @@ function codobookings_calendars_grid_shortcode( $atts ) {
     if ( ! empty( $atts['category'] ) ) {
         $query_args['tax_query'] = array(
             array(
-                'taxonomy' => 'calendar_category',  // custom taxonomy
+                'taxonomy' => 'codo_calendar_category',  // custom taxonomy
                 'field'    => 'slug',
                 'terms'    => sanitize_text_field( $atts['category'] ),
             ),

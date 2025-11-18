@@ -64,7 +64,7 @@ function codobookings_register_post_types() {
         'rewrite'           => false, // set to false if this is admin-only
     );
 
-    register_taxonomy( 'calendar_category', array( 'codo_calendar' ), $taxonomy_args );
+    register_taxonomy( 'codo_calendar_category', array( 'codo_calendar' ), $taxonomy_args );
 
     // Bookings
     $labels2 = array(
