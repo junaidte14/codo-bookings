@@ -142,18 +142,20 @@ add_action( 'wp_ajax_nopriv_codobookings_create_booking', 'codobookings_ajax_cre
 function codobookings_ajax_create_booking() {
     check_ajax_referer( 'codobookings_nonce', 'nonce' );
 
-    $calendar_id    = isset( $_POST['calendar_id'] ) ? absint( $_POST['calendar_id'] ) : 0;
-    $start          = isset( $_POST['start'] ) ? sanitize_text_field( wp_unslash( $_POST['start'] ) ) : '';
-    $end            = isset( $_POST['end'] ) ? sanitize_text_field( wp_unslash( $_POST['end'] ) ) : '';
-    $email          = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
-    $day = isset( $_POST['day'] ) ? sanitize_text_field( wp_unslash( $_POST['day'] ) ) : '';
+    // Sanitize and validate incoming POST data
+    $calendar_id = isset( $_POST['calendar_id'] ) ? absint( $_POST['calendar_id'] ) : 0;
+    $start       = isset( $_POST['start'] ) ? sanitize_text_field( wp_unslash( $_POST['start'] ) ) : '';
+    $end         = isset( $_POST['end'] ) ? sanitize_text_field( wp_unslash( $_POST['end'] ) ) : '';
+    $email       = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+    $day         = isset( $_POST['day'] ) ? sanitize_text_field( wp_unslash( $_POST['day'] ) ) : '';
 
     if ( ! $calendar_id || ! $start || ! $email ) {
         wp_send_json_error( 'Missing required fields (calendar, start time, or email).' );
     }
 
+    // Validate calendar
     $calendar_post = get_post( $calendar_id );
-    if ( ! $calendar_post || $calendar_post->post_type !== 'codo_calendar' ) {
+    if ( ! $calendar_post || $calendar_post->post_type !== 'codo_calendar' || $calendar_post->post_status !== 'publish' ) {
         wp_send_json_error( 'Invalid calendar ID.' );
     }
 
@@ -168,28 +170,31 @@ function codobookings_ajax_create_booking() {
         wp_send_json_error( 'Invalid date/time format. Use UTC format: YYYY-MM-DD HH:MM:SS' );
     }
 
+    // Build booking data array
     $booking_data = [
-        'title'          => sprintf( 'Booking - %s', $email ),
-        'calendar_id'    => $calendar_id,
-        'start'          => $start_dt->format('Y-m-d H:i:s'),
-        'end'            => $end_dt ? $end_dt->format('Y-m-d H:i:s') : '',
-        'recurrence'     => $recurrence,
-        'day' => $day,
-        'status'         => 'pending',
-        'email'          => $email,
-        'meta'           => [],
+        'title'       => sprintf( 'Booking - %s', $email ),
+        'calendar_id' => $calendar_id,
+        'start'       => $start_dt->format('Y-m-d H:i:s'),
+        'end'         => $end_dt ? $end_dt->format('Y-m-d H:i:s') : '',
+        'recurrence'  => sanitize_text_field( $recurrence ),
+        'day'         => sanitize_text_field( $day ),
+        'status'      => 'pending',
+        'email'       => $email,
+        'meta'        => [],
     ];
 
+    // Create booking (existing functionality)
     $booking_id = codobookings_create_booking( $booking_data );
 
     if ( is_wp_error( $booking_id ) ) {
         wp_send_json_error( $booking_id->get_error_message() );
     }
 
-    do_action( 'codobookings_after_ajax_create_booking', $booking_id, $_POST );
+    // Trigger hook with sanitized booking data only
+    do_action( 'codobookings_after_ajax_create_booking', $booking_id, $booking_data );
 
     wp_send_json_success( [
         'booking_id' => $booking_id,
-        'message'    => 'Booking confirmed successfully!'
+        'message'    => 'Booking confirmed successfully!',
     ] );
 }

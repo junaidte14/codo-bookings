@@ -126,7 +126,31 @@ function codobookings_save_calendar_meta( $post_id, $post ) {
     if ( ! wp_verify_nonce( $nonce, 'codobookings_save_calendar' ) ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-    $slots = isset( $_POST['codo_weekly_slots'] ) ? wp_unslash( $_POST['codo_weekly_slots'] ) : array();
+    //$slots = isset( $_POST['codo_weekly_slots'] ) ? wp_unslash( $_POST['codo_weekly_slots'] ) : array();
+    // Get raw input safely
+    $slots_raw = isset( $_POST['codo_weekly_slots'] ) ? wp_unslash( $_POST['codo_weekly_slots'] ) : array();
+    $slots_sanitized = array();
+
+    // Loop through each day
+    foreach ( (array) $slots_raw as $day => $day_slots ) {
+        $day = sanitize_key( $day ); // sanitize day key
+        if ( ! is_array( $day_slots ) ) continue;
+
+        $slots_sanitized[ $day ] = array();
+
+        foreach ( $day_slots as $slot ) {
+            $start = isset( $slot['start'] ) ? sanitize_text_field( $slot['start'] ) : '';
+            $end   = isset( $slot['end'] ) ? sanitize_text_field( $slot['end'] ) : '';
+
+            // Optional: validate time format HH:MM
+            if ( preg_match( '/^\d{2}:\d{2}$/', $start ) && preg_match( '/^\d{2}:\d{2}$/', $end ) ) {
+                $slots_sanitized[ $day ][] = array(
+                    'start' => $start,
+                    'end'   => $end,
+                );
+            }
+        }
+    }
     $days = array('monday','tuesday','wednesday','thursday','friday','saturday','sunday');
 
     foreach($days as $day){
@@ -226,18 +250,25 @@ function codobookings_sidebar_settings_cb( $post ) {
  */
 add_action( 'save_post', 'codobookings_save_sidebar_settings', 20, 2 );
 function codobookings_save_sidebar_settings( $post_id, $post ) {
+    // Only for codo_calendar post type
     if ( $post->post_type !== 'codo_calendar' ) return;
+    // Prevent auto-saves
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
-    if ( ! isset( $_POST['codobookings_sidebar_nonce'] ) || ! wp_verify_nonce( $_POST['codobookings_sidebar_nonce'], 'codobookings_save_sidebar_settings' ) ) return;
+    $nonce = $_POST['codobookings_sidebar_nonce'] ?? '';
+    $nonce = sanitize_text_field( wp_unslash( $nonce ) ); // unslash then sanitize
+    if ( ! wp_verify_nonce( $nonce, 'codobookings_save_sidebar_settings' ) ) {
+        return;
+    }
+    // Check permissions
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
-
-    $settings = $_POST['codo_sidebar_settings'] ?? array();
-    
+    // Sanitize and validate incoming settings
+    $raw_settings = $_POST['codo_sidebar_settings'] ?? array();
     $sanitized = array(
-        'show_title'  => isset( $settings['show_title'] ) && $settings['show_title'] === 'yes' ? 'yes' : 'no',
-        'allow_guest' => isset( $settings['allow_guest'] ) && $settings['allow_guest'] === 'yes' ? 'yes' : 'no',
+        'show_title'  => ( isset( $raw_settings['show_title'] ) && $raw_settings['show_title'] === 'yes' ) ? 'yes' : 'no',
+        'allow_guest' => ( isset( $raw_settings['allow_guest'] ) && $raw_settings['allow_guest'] === 'yes' ) ? 'yes' : 'no',
     );
-
+    // Apply optional filter before saving
     $sanitized = apply_filters( 'codobookings_sidebar_settings_sanitize', $sanitized, $post_id );
+    // Save sanitized settings
     update_post_meta( $post_id, '_codo_sidebar_settings', $sanitized );
 }

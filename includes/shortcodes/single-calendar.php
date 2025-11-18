@@ -24,8 +24,13 @@ function codobookings_calendar_shortcode( $atts ) {
 
     // Optionally, confirm that the post exists and is of the correct type
     $calendar_post = get_post( $calendar_id );
-    if ( ! $calendar_post || $calendar_post->post_type !== 'codo_calendar' ) {
-        return '<div class="codo-calendar-error">Calendar not found or invalid type.</div>';
+    // Validate post exists, is published, and is the correct post type
+    if (
+        ! $calendar_post ||
+        $calendar_post->post_type !== 'codo_calendar' ||
+        $calendar_post->post_status !== 'publish'
+    ) {
+        return '<p>' . __( 'This calendar is not available.', 'codobookings' ) . '</p>';
     }
 
     // Enqueue frontend assets

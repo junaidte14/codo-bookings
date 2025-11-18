@@ -1,0 +1,59 @@
+.codo-calendars-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: center;
+    align-items: stretch;
+    align-items: flex-start;
+    margin: 40px 0;
+}
+.codo-calendar-item {
+    flex: 1 1 calc(100% / var(--codo-grid-columns) - 25px);
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e3e3e3;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 10px;
+    text-align: center;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* ✅ allow content to stack naturally */
+    height: auto; /* ✅ ensures card fits content */
+}
+.codo-calendar-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.codo-calendar-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+.codo-calendar-thumb-wrap {
+    margin: -10px -10px 0 -10px; /* cancel out card padding */
+    overflow: hidden;
+}
+.codo-calendar-thumb {
+    width: 100%;
+    height: auto;
+    border-radius: 10px 10px 0 0;
+    object-fit: cover;
+}
+.codo-calendar-title {
+    margin-bottom: 10px;
+}
+.codo-calendar-desc {
+    margin-bottom: 20px;
+}
+.codo-book-btn {
+    display: inline-block;
+    font-weight: 500;
+}
+@media (max-width: 1024px) {
+    .codo-calendar-item { flex: 1 1 calc(50% - 25px); }
+}
+@media (max-width: 640px) {
+    .codo-calendar-item { flex: 1 1 100%; }
+}

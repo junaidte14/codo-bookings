@@ -98,7 +98,7 @@ function codobookings_calendar_filter_dropdown() {
         return;
     }
 
-    $selected = isset( $_GET['recurrence_filter'] ) ? $_GET['recurrence_filter'] : '';
+    $selected = isset( $_GET['recurrence_filter'] ) ? sanitize_text_field( wp_unslash($_GET['recurrence_filter']) ) : '';
     ?>
     <select name="recurrence_filter">
         <option value=""><?php esc_html_e( 'All Types', 'codobookings' ); ?></option>
@@ -135,7 +135,7 @@ add_action( 'restrict_manage_posts', function( $post_type ) {
     }
 
     $taxonomy = 'calendar_category';
-    $selected = isset( $_GET[$taxonomy] ) ? $_GET[$taxonomy] : '';
+    $selected = isset( $_GET[$taxonomy] ) ? absint($_GET[$taxonomy]) : 0;
     $info_taxonomy = get_taxonomy( $taxonomy );
 
     wp_dropdown_categories( array(
@@ -299,11 +299,12 @@ function codobookings_add_booking_filters() {
     echo '</select>';
 
     // Status Filter
+    $status_selected = isset( $_GET['codo_status_filter'] ) ? sanitize_text_field( wp_unslash($_GET['codo_status_filter']) ) : '';
     $statuses = array( 'pending', 'confirmed', 'cancelled', 'completed' );
     echo '<select name="codo_status_filter">';
     echo '<option value="">' . esc_html__( 'All Statuses', 'codobookings' ) . '</option>';
     foreach ( $statuses as $status ) {
-        echo '<option value="' . esc_attr( $status ) . '" ' . selected( $_GET['codo_status_filter'] ?? '', $status, false ) . '>' . esc_html( ucfirst( $status ) ) . '</option>';
+        echo '<option value="' . esc_attr( $status ) . '" ' . selected( $status_selected, $status, false ) . '>' . esc_html( ucfirst( $status ) ) . '</option>';
     }
     echo '</select>';
 }
