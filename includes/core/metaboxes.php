@@ -126,7 +126,6 @@ function codobookings_save_calendar_meta( $post_id, $post ) {
     if ( ! wp_verify_nonce( $nonce, 'codobookings_save_calendar' ) ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-    //$slots = isset( $_POST['codo_weekly_slots'] ) ? wp_unslash( $_POST['codo_weekly_slots'] ) : array();
     // Get raw input safely
     $slots_raw = isset( $_POST['codo_weekly_slots'] ) ? wp_unslash( $_POST['codo_weekly_slots'] ) : array();
     $slots_sanitized = array();
@@ -164,11 +163,12 @@ function codobookings_save_calendar_meta( $post_id, $post ) {
         }
     }
 
-    update_post_meta( $post_id, '_codo_weekly_slots', $$slots_sanitized );
-    update_post_meta( $post_id, '_codo_recurrence', sanitize_text_field( $_POST['codo_recurrence'] ?? 'none' ) );
+    update_post_meta( $post_id, '_codo_weekly_slots', $slots_sanitized );
+    $recurrence = isset( $_POST['codo_recurrence'] ) ? sanitize_text_field( wp_unslash( $_POST['codo_recurrence'] ) ) : 'none';
+    update_post_meta( $post_id, '_codo_recurrence', $recurrence );
 
     if ( isset( $_POST['codo_confirmation_message'] ) ) {
-        update_post_meta( $post_id, '_codo_confirmation_message', sanitize_textarea_field( $_POST['codo_confirmation_message'] ) );
+        update_post_meta( $post_id, '_codo_confirmation_message', sanitize_textarea_field( wp_unslash($_POST['codo_confirmation_message']) ) );
     }
 
     do_action( 'codobookings_calendar_saved', $post_id );
@@ -254,17 +254,17 @@ function codobookings_save_sidebar_settings( $post_id, $post ) {
     if ( $post->post_type !== 'codo_calendar' ) return;
     // Prevent auto-saves
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
-    $nonce = $_POST['codobookings_sidebar_nonce'] ?? '';
-    $nonce = sanitize_text_field( wp_unslash( $nonce ) ); // unslash then sanitize
+    $nonce = isset( $_POST['codobookings_sidebar_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['codobookings_sidebar_nonce'] ) ) : '';
     if ( ! wp_verify_nonce( $nonce, 'codobookings_save_sidebar_settings' ) ) {
         return;
     }
     // Check permissions
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
     // Sanitize and validate incoming settings
-    $raw_settings = $_POST['codo_sidebar_settings'] ?? array();
+    $raw_settings = isset( $_POST['codo_sidebar_settings'] ) && is_array( $_POST['codo_sidebar_settings'] ) ? wp_unslash( $_POST['codo_sidebar_settings'] ) : array();
+
     $sanitized = array(
-        'show_title'  => ( isset( $raw_settings['show_title'] ) && $raw_settings['show_title'] === 'yes' ) ? 'yes' : 'no',
+        'show_title' => ( isset( $raw_settings['show_title'] ) && $raw_settings['show_title'] === 'yes' ) ? 'yes' : 'no',
         'allow_guest' => ( isset( $raw_settings['allow_guest'] ) && $raw_settings['allow_guest'] === 'yes' ) ? 'yes' : 'no',
     );
     // Apply optional filter before saving

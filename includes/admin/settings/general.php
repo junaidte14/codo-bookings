@@ -36,12 +36,19 @@ function codobookings_settings_page() {
     if ( ! current_user_can( 'manage_options' ) ) return;
 
     $tabs       = codobookings_get_settings_tabs();
-    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
-    if ( ! isset( $tabs[ $active_tab ] ) ) $active_tab = 'general';
-
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- safe because it's just for tab navigation
+    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
+    if ( ! isset( $tabs[ $active_tab ] ) ) {
+        $active_tab = 'general';
+    }
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- safe because it's a UI flag after saving settings
     if ( isset( $_GET['settings-updated'] ) ) {
-        add_settings_error( 'codobookings_messages', 'codobookings_message',
-            __( 'Settings saved successfully.', 'codobookings' ), 'updated' );
+        add_settings_error(
+            'codobookings_messages',
+            'codobookings_message',
+            __( 'Settings saved successfully.', 'codobookings' ),
+            'updated'
+        );
     }
 
     settings_errors( 'codobookings_messages' );
@@ -80,7 +87,8 @@ function codobookings_settings_page() {
 function codobookings_admin_inline_js( $hook ) {
     if ( $hook !== 'settings_page_codobookings_settings' ) return;
 
-    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- safe, only used for UI tab switching
+    $active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
 
     wp_add_inline_script( 'jquery-core', "
         jQuery(document).ready(function($){

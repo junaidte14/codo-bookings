@@ -97,8 +97,19 @@ function codobookings_calendar_filter_dropdown() {
     if ( $typenow !== 'codo_calendar' ) {
         return;
     }
-
-    $selected = isset( $_GET['recurrence_filter'] ) ? sanitize_text_field( wp_unslash($_GET['recurrence_filter']) ) : '';
+    // Only trust $_GET if nonce is valid; otherwise ignore the filter.
+    $selected = '';
+    if (
+        isset($_GET['codobookings_calendar_filter_nonce']) &&
+        wp_verify_nonce(
+            sanitize_text_field( wp_unslash($_GET['codobookings_calendar_filter_nonce']) ),
+            'codobookings_calendar_filter_action'
+        ) &&
+        isset($_GET['recurrence_filter'])
+    ) {
+        $selected = sanitize_text_field( wp_unslash($_GET['recurrence_filter']) );
+    }
+    wp_nonce_field( 'codobookings_calendar_filter_action', 'codobookings_calendar_filter_nonce' );
     ?>
     <select name="recurrence_filter">
         <option value=""><?php esc_html_e( 'All Types', 'codobookings' ); ?></option>
@@ -117,11 +128,18 @@ function codobookings_filter_calendars_by_type( $query ) {
         return;
     }
 
+    // ---- Nonce Check ----
+    if ( ! isset($_GET['codobookings_calendar_filter_nonce']) ||
+         ! wp_verify_nonce( sanitize_text_field( wp_unslash($_GET['codobookings_calendar_filter_nonce']) ), 'codobookings_calendar_filter_action' )
+    ) {
+        return; // Nonce invalid → Do not apply filter
+    }
+
     if ( isset( $_GET['recurrence_filter'] ) && $_GET['recurrence_filter'] !== '' ) {
         $query->set( 'meta_query', array(
             array(
                 'key'     => '_codo_recurrence',
-                'value'   => sanitize_text_field( $_GET['recurrence_filter'] ),
+                'value' => sanitize_text_field( wp_unslash( $_GET['recurrence_filter'] ) ),
                 'compare' => '=',
             ),
         ) );
@@ -133,10 +151,22 @@ add_action( 'restrict_manage_posts', function( $post_type ) {
     if ( $post_type !== 'codo_calendar' ) {
         return;
     }
-
     $taxonomy = 'codo_calendar_category';
-    $selected = isset( $_GET[$taxonomy] ) ? absint($_GET[$taxonomy]) : 0;
-    $info_taxonomy = get_taxonomy( $taxonomy );
+    // Default value
+    $selected = 0;
+    // 🔐 Only trust the GET value if nonce is valid
+    if (
+        isset($_GET['codobookings_calendar_cat_filter_nonce']) &&
+        wp_verify_nonce(
+            sanitize_text_field( wp_unslash($_GET['codobookings_calendar_cat_filter_nonce']) ),
+            'codobookings_calendar_cat_filter_action'
+        ) &&
+        isset($_GET[$taxonomy])
+    ) {
+        $selected = absint( wp_unslash( $_GET[$taxonomy] ) );
+    }
+    // 🔐 Nonce field
+    wp_nonce_field( 'codobookings_calendar_cat_filter_action', 'codobookings_calendar_cat_filter_nonce' );
 
     wp_dropdown_categories( array(
         'show_option_all' => __( 'All Categories', 'codobookings' ),
@@ -157,15 +187,34 @@ add_filter( 'parse_query', function( $query ) {
     $taxonomy = 'codo_calendar_category';
     $q_vars   = &$query->query_vars;
 
-    if ( $pagenow === 'edit.php'
+    if (
+        $pagenow === 'edit.php'
         && isset( $q_vars['post_type'] )
         && $q_vars['post_type'] === 'codo_calendar'
-        && isset( $q_vars[$taxonomy] )
-        && is_numeric( $q_vars[$taxonomy] )
-        && $q_vars[$taxonomy] != 0
     ) {
-        $term = get_term_by( 'id', $q_vars[$taxonomy], $taxonomy );
-        $q_vars[$taxonomy] = $term->slug;
+
+        // 🔐 Verify nonce BEFORE applying the filter
+        if (
+            ! isset($_GET['codobookings_calendar_cat_filter_nonce']) ||
+            ! wp_verify_nonce(
+                sanitize_text_field( wp_unslash($_GET['codobookings_calendar_cat_filter_nonce']) ),
+                'codobookings_calendar_cat_filter_action'
+            )
+        ) {
+            return; // Invalid nonce → do not change the query
+        }
+
+        // Apply filter ONLY if the taxonomy var exists and is valid
+        if (
+            isset( $q_vars[$taxonomy] )
+            && is_numeric( $q_vars[$taxonomy] )
+            && $q_vars[$taxonomy] != 0
+        ) {
+            $term = get_term_by( 'id', (int) $q_vars[$taxonomy], $taxonomy );
+            if ( $term ) {
+                $q_vars[$taxonomy] = $term->slug;
+            }
+        }
     }
 });
 
@@ -279,32 +328,67 @@ function codobookings_add_booking_filters() {
     global $typenow;
     if ( $typenow !== 'codo_booking' ) return;
 
-    // Get unique calendar IDs from existing bookings
+    // 🔐 Nonce for booking filters
+    wp_nonce_field( 'codobookings_booking_filters_action', 'codobookings_booking_filters_nonce' );
+
+    // Get unique calendar IDs used in bookings
     $calendar_ids = get_posts( array(
         'post_type'      => 'codo_booking',
         'posts_per_page' => -1,
         'fields'         => 'ids',
     ) );
-    $used_calendar_ids = array_unique( array_filter( array_map( function( $id ) {
-        return get_post_meta( $id, '_codo_calendar_id', true );
-    }, $calendar_ids ) ) );
 
+    $used_calendar_ids = array_unique( array_filter( array_map(
+        function( $id ) {
+            return get_post_meta( $id, '_codo_calendar_id', true );
+        },
+        $calendar_ids
+    ) ) );
+
+    // ---------------------------
+    // Pre-select values safely
+    // ---------------------------
+    $selected = '';
+    $status_selected = '';
+
+    if (
+        isset($_GET['codobookings_booking_filters_nonce']) &&
+        wp_verify_nonce(
+            sanitize_text_field( wp_unslash($_GET['codobookings_booking_filters_nonce']) ),
+            'codobookings_booking_filters_action'
+        )
+    ) {
+        if ( isset($_GET['codo_calendar_filter']) ) {
+            $selected = sanitize_text_field( wp_unslash($_GET['codo_calendar_filter']) );
+        }
+        if ( isset($_GET['codo_status_filter']) ) {
+            $status_selected = sanitize_text_field( wp_unslash($_GET['codo_status_filter']) );
+        }
+    }
+
+    // ---------------------------
     // Calendar Filter
+    // ---------------------------
     echo '<select name="codo_calendar_filter">';
     echo '<option value="">' . esc_html__( 'All Calendars', 'codobookings' ) . '</option>';
     foreach ( $used_calendar_ids as $calendar_id ) {
-        $selected = ( isset( $_GET['codo_calendar_filter'] ) && $_GET['codo_calendar_filter'] == $calendar_id ) ? 'selected' : '';
-        echo '<option value="' . esc_attr( $calendar_id ) . '" ' . esc_attr( $selected ) . '>' . esc_html( get_the_title( $calendar_id ) ) . '</option>';
+        echo '<option value="' . esc_attr( $calendar_id ) . '" ' . selected( $selected, $calendar_id, false ) . '>' .
+            esc_html( get_the_title( $calendar_id ) ) .
+        '</option>';
     }
     echo '</select>';
 
+    // ---------------------------
     // Status Filter
-    $status_selected = isset( $_GET['codo_status_filter'] ) ? sanitize_text_field( wp_unslash($_GET['codo_status_filter']) ) : '';
+    // ---------------------------
     $statuses = array( 'pending', 'confirmed', 'cancelled', 'completed' );
+
     echo '<select name="codo_status_filter">';
     echo '<option value="">' . esc_html__( 'All Statuses', 'codobookings' ) . '</option>';
     foreach ( $statuses as $status ) {
-        echo '<option value="' . esc_attr( $status ) . '" ' . selected( $status_selected, $status, false ) . '>' . esc_html( ucfirst( $status ) ) . '</option>';
+        echo '<option value="' . esc_attr( $status ) . '" ' . selected( $status_selected, $status, false ) . '>' .
+            esc_html( ucfirst( $status ) ) .
+        '</option>';
     }
     echo '</select>';
 }
@@ -313,25 +397,48 @@ function codobookings_add_booking_filters() {
 add_action( 'pre_get_posts', 'codobookings_filter_bookings_query' );
 function codobookings_filter_bookings_query( $query ) {
     global $pagenow;
-    if ( ! is_admin() || $pagenow !== 'edit.php' || $query->get('post_type') !== 'codo_booking' ) return;
 
-    // Filter by Calendar
-    if ( ! empty( $_GET['codo_calendar_filter'] ) ) {
+    if (
+        ! is_admin() ||
+        $pagenow !== 'edit.php' ||
+        $query->get('post_type') !== 'codo_booking'
+    ) {
+        return;
+    }
+
+    // 🔐 Verify nonce
+    if (
+        ! isset($_GET['codobookings_booking_filters_nonce']) ||
+        ! wp_verify_nonce(
+            sanitize_text_field( wp_unslash($_GET['codobookings_booking_filters_nonce']) ),
+            'codobookings_booking_filters_action'
+        )
+    ) {
+        return; // Invalid nonce → do not apply filters
+    }
+
+    // ---- Filter by Calendar ----
+    if ( ! empty($_GET['codo_calendar_filter']) ) {
+        $calendar = sanitize_text_field( wp_unslash($_GET['codo_calendar_filter']) );
+
         $query->set( 'meta_query', array(
             array(
                 'key'   => '_codo_calendar_id',
-                'value' => sanitize_text_field( $_GET['codo_calendar_filter'] ),
+                'value' => $calendar,
             )
         ) );
     }
 
-    // Filter by Status
-    if ( ! empty( $_GET['codo_status_filter'] ) ) {
+    // ---- Filter by Status ----
+    if ( ! empty($_GET['codo_status_filter']) ) {
+        $status = sanitize_text_field( wp_unslash($_GET['codo_status_filter']) );
+
         $meta_query = (array) $query->get( 'meta_query' );
         $meta_query[] = array(
             'key'   => '_codo_status',
-            'value' => sanitize_text_field( $_GET['codo_status_filter'] ),
+            'value' => $status,
         );
+
         $query->set( 'meta_query', $meta_query );
     }
 }
